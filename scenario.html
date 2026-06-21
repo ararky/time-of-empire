@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time of Empire — 文明史トレーラー</title>
+<style>
+  :root{
+    --ink:#f4ead5;
+    --dim:#b9a98a;
+    --gold:#e0b54a;
+    --tint:#1a1410;       /* 現在の時代の色（JSで切替） */
+    --accent:#c97b3c;     /* 現在の時代のアクセント */
+    --accent2:#e0b54a;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;
+    color:var(--ink); background:#0b0907; overflow-x:hidden;
+    line-height:1.85; -webkit-font-smoothing:antialiased;
+  }
+  .mincho{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;}
+
+  /* === 背景レイヤー：時代ごとに色がにじみ変わる === */
+  #bgfx{position:fixed; inset:0; z-index:-2; transition:background 1.4s ease;
+    background:
+      radial-gradient(120% 80% at 50% -10%, color-mix(in srgb,var(--accent) 28%, transparent), transparent 60%),
+      radial-gradient(90% 60% at 80% 110%, color-mix(in srgb,var(--tint) 80%, transparent), transparent 70%),
+      linear-gradient(180deg, #0b0907, var(--tint));
+  }
+  #grain{position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.05; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");}
+  /* シネマ用レターボックス */
+  .bar{position:fixed; left:0; right:0; height:34px; background:#000; z-index:60; pointer-events:none;}
+  .bar.top{top:0; box-shadow:0 1px 0 rgba(224,181,74,.15);} .bar.bot{bottom:0; box-shadow:0 -1px 0 rgba(224,181,74,.15);}
+
+  /* スクロール進捗バー */
+  #prog{position:fixed; top:34px; left:0; height:3px; width:0; z-index:61;
+    background:linear-gradient(90deg,var(--accent),var(--gold)); box-shadow:0 0 12px var(--gold); transition:width .1s linear;}
+
+  /* タイムライン・ナビ（右） */
+  #nav{position:fixed; right:14px; top:50%; transform:translateY(-50%); z-index:55; display:flex; flex-direction:column; gap:13px;}
+  #nav a{width:11px; height:11px; border-radius:50%; border:1.5px solid var(--dim); opacity:.5; transition:.3s; position:relative;}
+  #nav a.active{opacity:1; background:var(--gold); border-color:var(--gold); box-shadow:0 0 12px var(--gold); transform:scale(1.25);}
+  #nav a span{position:absolute; right:20px; top:50%; transform:translateY(-50%); white-space:nowrap;
+    font-size:11px; color:var(--dim); opacity:0; transition:.3s; pointer-events:none; letter-spacing:.08em;}
+  #nav a:hover span{opacity:1;}
+  @media(max-width:640px){ #nav{display:none;} }
+
+  section{position:relative; padding:0 22px; max-width:760px; margin:0 auto;}
+  .pad{min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding-top:60px; padding-bottom:60px;}
+
+  /* === reveal === */
+  .rv{opacity:0; transform:translateY(34px); transition:opacity 1s ease, transform 1s cubic-bezier(.2,.7,.2,1);}
+  .rv.in{opacity:1; transform:none;}
+  .rv.blur{filter:blur(8px);} .rv.blur.in{filter:blur(0);}
+
+  /* === ヒーロー === */
+  #hero{height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; position:relative;}
+  .toptag{font-size:11px; letter-spacing:.55em; color:var(--gold); margin-bottom:26px; text-indent:.55em;}
+  .hero-poem{font-size:clamp(15px,2.4vw,20px); color:var(--dim); margin-bottom:30px; letter-spacing:.06em;}
+  .hero-poem b{color:var(--ink); font-weight:400;}
+  #hero h1{font-size:clamp(44px,11vw,108px); letter-spacing:.04em; line-height:1;
+    background:linear-gradient(180deg,#fff7e0,#e0b54a 60%,#b9852a); -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 0 50px rgba(224,181,74,.25); margin:6px 0 4px;}
+  .hero-sub{font-size:clamp(12px,2vw,15px); color:var(--dim); letter-spacing:.3em; margin-top:14px;}
+  .scrollcue{position:absolute; bottom:46px; font-size:11px; color:var(--dim); letter-spacing:.25em; animation:bob 2s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0); opacity:.5} 50%{transform:translateY(8px); opacity:1}}
+  .embers{position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:-1;}
+  .ember{position:absolute; bottom:-10px; width:4px; height:4px; border-radius:50%;
+    background:radial-gradient(circle,#ffd27a,#c97b3c); box-shadow:0 0 8px #e0b54a; animation:fly linear infinite;}
+  @keyframes fly{to{transform:translateY(-105vh) translateX(var(--dx)); opacity:0;}}
+
+  /* === 時代タイトルカード === */
+  .titlecard{height:92vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;}
+  .titlecard .era-no{font-size:12px; letter-spacing:.5em; color:var(--accent2); margin-bottom:10px;}
+  .titlecard .big-emoji{font-size:clamp(80px,18vw,150px); line-height:1; filter:drop-shadow(0 12px 40px rgba(0,0,0,.6)); animation:float 6s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+  .titlecard h2{font-size:clamp(40px,9vw,82px); letter-spacing:.12em; margin:14px 0 0; color:#fff; text-shadow:0 4px 30px rgba(0,0,0,.5);}
+  .titlecard .era-en{font-size:12px; letter-spacing:.4em; color:var(--dim); margin-top:14px;}
+  .titlecard .era-tag{margin-top:26px; font-size:clamp(15px,2.5vw,21px); color:var(--ink); max-width:540px; line-height:1.7;}
+  .rule{width:60px; height:2px; margin:22px auto 0; background:linear-gradient(90deg,transparent,var(--accent2),transparent);}
+
+  /* セクション見出し */
+  .kicker{font-size:11px; letter-spacing:.4em; color:var(--accent2); margin-bottom:14px;}
+  .air p{font-size:clamp(15px,2.2vw,18px); color:var(--ink); margin-bottom:18px;}
+  .air .lead{font-size:clamp(19px,3vw,26px); color:#fff; line-height:1.6; font-weight:400;}
+  .air b{color:var(--gold); font-weight:600;}
+
+  /* 文明のかけら */
+  .frags{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:10px;}
+  @media(max-width:560px){ .frags{grid-template-columns:1fr;} }
+  .frag{background:rgba(255,255,255,.04); border:1px solid rgba(224,181,74,.18); border-radius:14px; padding:16px 16px;
+    backdrop-filter:blur(4px);}
+  .frag .ft{font-weight:700; color:var(--accent2); font-size:14px; margin-bottom:6px; letter-spacing:.04em;}
+  .frag .fx{font-size:13.5px; color:var(--dim); line-height:1.7;}
+
+  /* 偉業カード */
+  .wonder{margin-top:8px; border-radius:18px; padding:28px 24px; text-align:center; position:relative; overflow:hidden;
+    background:linear-gradient(180deg, rgba(224,181,74,.16), rgba(180,140,40,.05));
+    border:1px solid rgba(224,181,74,.45); box-shadow:0 0 60px rgba(224,181,74,.1) inset;}
+  .wonder::before{content:"偉業 / WONDER"; position:absolute; top:12px; left:0; right:0; font-size:10px; letter-spacing:.4em; color:var(--gold); opacity:.7;}
+  .wonder .we{font-size:64px; line-height:1; margin:18px 0 6px; filter:drop-shadow(0 8px 20px rgba(0,0,0,.5));}
+  .wonder .wn{font-size:24px; font-weight:800; color:#fff; letter-spacing:.06em;}
+  .wonder .wtext{font-size:14px; color:var(--ink); margin:12px auto 0; max-width:520px; line-height:1.8;}
+  .wonder .weff{display:inline-block; margin-top:16px; font-size:12px; font-weight:800; letter-spacing:.05em;
+    color:var(--gold); border:1px solid rgba(224,181,74,.5); border-radius:30px; padding:6px 16px;}
+
+  /* イベントカード */
+  .events{display:flex; flex-direction:column; gap:14px; margin-top:8px;}
+  .ev{border-radius:16px; padding:18px 20px; position:relative; overflow:hidden;
+    background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.1);}
+  .ev .ehead{display:flex; align-items:center; gap:12px; margin-bottom:8px;}
+  .ev .eemoji{font-size:34px; line-height:1; flex-shrink:0;}
+  .ev .etitle{font-size:17px; font-weight:800; color:#fff; letter-spacing:.03em;}
+  .ev .ekind{font-size:10px; font-weight:800; letter-spacing:.12em; padding:3px 9px; border-radius:20px; flex-shrink:0;
+    border:1px solid currentColor;}
+  .ev .estory{font-size:14px; color:var(--ink); line-height:1.8;}
+  .ev .eeff{margin-top:10px; font-size:12.5px; color:var(--accent2); font-weight:700;}
+  .ev .eeff::before{content:"▸ "; opacity:.7;}
+
+  /* 種別カラー */
+  .k-飛躍{color:#ffcf6a;} .k-報酬{color:#9fcf7a;} .k-近道{color:#7ad0c0;}
+  .k-橋渡し{color:#7ab5e0;} .k-ピンチ{color:#e08a7a;} .k-クライマックス{color:#ffe08a;} .k-エンド{color:#c8a0e0;}
+
+  /* EPOCH（飛躍・主役級）演出 */
+  .ev.epoch{background:linear-gradient(135deg, rgba(224,181,74,.14), rgba(201,123,60,.06));
+    border:1px solid rgba(224,181,74,.55); box-shadow:0 0 40px rgba(224,181,74,.12);}
+  .ev.epoch::after{content:"EPOCH"; position:absolute; top:14px; right:-30px; transform:rotate(45deg);
+    background:linear-gradient(90deg,var(--accent),var(--gold)); color:#3a2810; font-size:10px; font-weight:900;
+    letter-spacing:.2em; padding:3px 36px; box-shadow:0 2px 10px rgba(0,0,0,.4);}
+  .ev.epoch .etitle{background:linear-gradient(90deg,#fff,#ffd884); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .ev.epoch .ekind{display:none;}  /* EPOCHリボンと重複するため非表示 */
+  .ev.epoch{animation:epochpulse 3.5s ease-in-out infinite;}
+  @keyframes epochpulse{0%,100%{box-shadow:0 0 40px rgba(224,181,74,.1);}50%{box-shadow:0 0 70px rgba(224,181,74,.28);}}
+
+  /* 終章 */
+  #epilogue{text-align:center;}
+  #epilogue .star{font-size:60px; animation:twinkle 3s ease-in-out infinite;}
+  @keyframes twinkle{0%,100%{opacity:.6; transform:scale(1)}50%{opacity:1; transform:scale(1.15)}}
+
+  /* CTA */
+  #cta{height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;}
+  #cta .ctitle{font-size:clamp(28px,6vw,52px); color:#fff; letter-spacing:.06em; line-height:1.4;}
+  #cta .csub{color:var(--dim); margin:18px 0 34px; letter-spacing:.1em; font-size:14px;}
+  #cta a.play{display:inline-flex; align-items:center; gap:10px; text-decoration:none;
+    background:linear-gradient(180deg,#f5d573,#e0b54a); color:#5a3d12; font-weight:900; font-size:17px;
+    padding:16px 40px; border-radius:40px; box-shadow:0 8px 30px rgba(224,181,74,.35); letter-spacing:.05em; transition:transform .1s;}
+  #cta a.play:active{transform:translateY(2px);}
+  footer{text-align:center; color:#6f6450; font-size:11px; padding:40px 20px 70px;}
+</style>
+</head>
+<body>
+<div id="bgfx"></div>
+<div id="grain"></div>
+<div class="bar top"></div>
+<div class="bar bot"></div>
+<div id="prog"></div>
+<nav id="nav"></nav>
+
+<!-- HERO -->
+<section id="hero" data-tint="#1a1410" data-accent="#c97b3c">
+  <div class="embers" id="embers"></div>
+  <div class="toptag rv blur">OFFICIAL STORY TRAILER</div>
+  <div class="hero-poem mincho rv">一粒の火から、<b>星をまたぐ帝国</b>まで。</div>
+  <h1 class="mincho rv">Time of Empire</h1>
+  <div class="hero-sub rv">A CIVILIZATION, IN YOUR HANDS</div>
+  <div class="scrollcue">SCROLL ▾</div>
+</section>
+
+<main id="story"></main>
+
+<!-- CTA -->
+<section id="cta" data-tint="#101a22" data-accent="#4a90d9">
+  <div class="ctitle mincho rv">歴史は、まだ途中だ。</div>
+  <div class="csub rv">続きを動かすのは、あなたの手。</div>
+  <a class="play rv" href="index.html">▶ 帝国を建てはじめる</a>
+</section>
+<footer>Time of Empire — 文明史シナリオ予告編 / 本編シナリオは SCENARIO.md より</footer>
+
+<script>
+/* ===== シナリオデータ ===== */
+const PROLOGUE = {
+  kicker:"PROLOGUE — 序章",
+  title:"はじまりの火",
+  lead:"世界は、まだ名前を持っていなかった。",
+  body:[
+    "空には名づけられていない星がめぐり、川には呼ばれていない水が流れ、地平の向こうには、誰も歩いたことのない大地がただ広がっていた。そこには、ひとつだけ欠けているものがあった。「明日のことを思い悩む者」が、まだいなかったのだ。",
+    "やがて立ち上がった小さな者たちは、爪も牙も貧しかった。けれど彼らには奇妙な力があった。<b>「覚えること」</b>ができたのだ。昨日うまくいったことを、明日もやってみようとした。この、ささやかな力こそが、やがて大地を耕し、星を読み、空を飛び、ついには惑星そのものを変えてしまう、すべての始まりだった。",
+    "あるとき、雷が枯れ木を焼いた。皆が逃げ惑うなか、ひとりの者だけが足を止め、炎を見つめた。――もし、これを「飼う」ことができたら? その夜、世界で初めて、人間の手によって火が運ばれた。<b>自然を受け入れる生き物から、自然を作り変える生き物への、最初の一歩</b>だった。",
+    "あなたは、その者たちの長(おさ)である。さあ、最初の薪をくべよう。歴史は、あなたがタップした、その瞬間から動きはじめる。"
+  ]
+};
+
+const ERAS = [
+  {
+    no:"第1時代 / AGE I", name:"原始時代", en:"THE DAWN", emoji:"🛖",
+    tint:"#211710", accent:"#d2772f", accent2:"#e0a44a",
+    tag:"生き延びることそのものが、祝祭だった。",
+    air:{
+      lead:"風がすべてを支配していた。",
+      body:[
+        "雨が降れば濡れ、日が照れば焼かれ、獣が来れば逃げる。人々は手のひらほどの理由で生き、手のひらほどの理由で死んだ。それでも、火を囲む夜だけは違った。炎のまわりには、不思議と「明日」があった。",
+        "この時代の人々は、毎日<b>「足りない」</b>を学んでいた。だからこそ、何かが「満ちる」瞬間の喜びは、後のどの時代よりも純粋だった。狩りが成功した夜。木の実が実った朝。新しい子が生まれた日。"
+      ]
+    },
+    frags:[
+      {t:"石を割る者たち",x:"ただの石ころが、叩き方ひとつで刃になる。人類最初の「技術」であり、最初の「職人」だった。"},
+      {t:"言葉を編む者たち",x:"獣の鳴き真似が、いつしか「あそこに水がある」を伝える。見ていないものを共有する魔法。"},
+      {t:"絵を描く者たち",x:"洞窟の壁に炭で獣を描く。記録であり、祈りであり、世界で最初の「芸術」だった。"}
+    ],
+    wonder:{emoji:"🗿", name:"巨石像", eff:"全生産 +15%（永久）",
+      text:"食べられもしない、住めもしない石を、なぜ立てる? 理由は誰にも言えなかった。だが石が立った日、人々は悟った――「自分たちは、何かを“遺す”ことができる」。空腹の外側にある、最初の贅沢。人間が初めて作った「意味」だった。"},
+    events:[
+      {id:"01", emoji:"🔥", title:"火の手なずけ", kind:"飛躍", epoch:true,
+        story:"雷に焼かれた枯れ木から、村人がおずおずと火種を運んでくる。村に、初めての焚き火が灯る。夜が怖くなくなり、獣が近づかなくなった。",
+        eff:"食料が一時2倍。調理を覚え、以降の食料採取に永久ボーナス"},
+      {id:"02", emoji:"🌾", title:"農耕のひらめき", kind:"飛躍", epoch:true,
+        story:"こぼれた種が、捨て場の脇で勝手に芽吹いていた。「植えれば……生える?」――追いかけて狩るのではなく、待てば実る。人類の発想がひっくり返る瞬間。",
+        eff:"畑を永久強化。定住が可能になり、人口上限が増える"},
+      {id:"03", emoji:"🖐️", title:"はじめての言葉の刻印", kind:"近道",
+        story:"洞窟の壁に、村でいちばん年老いた者が手形を押す。次の世代へ、「ここに我々がいた」と伝えるために。",
+        eff:"資源ボーナス＋次の時代への要求が少し緩和"},
+      {id:"04", emoji:"🐾", title:"大いなる移住", kind:"報酬",
+        story:"獣の群れが季節とともに大移動する。村人は数日かけて後を追い、かつてない大猟を得た。",
+        eff:"全資源が一時的に大量流入（留守ボーナス上乗せ）"}
+    ]
+  },
+  {
+    no:"第2時代 / AGE II", name:"古代", en:"THE ANCIENTS", emoji:"🏛️",
+    tint:"#221d10", accent:"#cda23a", accent2:"#e6c45a",
+    tag:"文明とは、つきつめれば「余りの分けあい方」の発明だった。",
+    air:{
+      lead:"種をまけば実ると知った人々は、もう川辺を離れられなくなった。",
+      body:[
+        "同じ土地に留まり、同じ畑を見守り、同じ墓に死者を葬る。「土地」という言葉が、初めて意味を持ちはじめた。そして定住は、思いがけないものを生んだ――<b>「余り」</b>だ。",
+        "腹を満たしてなお、穀物が倉に残る。すると、食べ物を作らなくてもいい者が現れる。壺を作る者、石に印を刻む者、星をながめる者。こうして人は初めて「役割」を分けあった。村は町になり、町は都市になり、長は王と呼ばれるようになる。"
+      ]
+    },
+    frags:[
+      {t:"文字を発明した者たち",x:"粘土に葦を押しつけ収穫高を記録した。記憶は人とともに死ぬが、文字は死なない。時間を越えて語りかける手段。"},
+      {t:"車輪を回した者たち",x:"「軸を通して、輪だけ回せたら?」 人間の力を何倍にも増幅する、最初の機械。"},
+      {t:"青銅を鋳た者たち",x:"火で金属を溶かし、型に流す。地中の石から道具を「生み出す」術。"},
+      {t:"星を読む者たち",x:"夜空の規則から、種まきと洪水の時を導いた。暦の誕生。時間を支配する者が、人を支配する。"}
+    ],
+    wonder:{emoji:"🛕", name:"大神殿", eff:"全生産 +20%（永久）",
+      text:"王は「神々のために」と言った。だが神殿はもっと多くを成した。見ず知らずの他人どうしが、同じ神を仰ぎ、同じ祭りに集い、神殿の影のもとで「我ら」になる。石の建造物が、人の心をひとつにした。国家になるための、見えない接着剤。"},
+    events:[
+      {id:"05", emoji:"📜", title:"文字の誕生", kind:"飛躍", epoch:true,
+        story:"倉の管理人が麦の数を覚えきれず、粘土に刻みを入れはじめる。やがて刻みは記号となり――文字になる。「これがあれば、死んでも、伝わる」。",
+        eff:"知識が蓄積。以降すべての偉業の建設時間が永久短縮＋大量資源"},
+      {id:"06", emoji:"🛞", title:"車輪と荷車", kind:"飛躍",
+        story:"石切場の労働者が、丸太の上を石が転がるのを見て閃く。軸と輪を組んだ荷車が、ひとりの力を十人分に変える。",
+        eff:"石と木の生産に永久ボーナス"},
+      {id:"07", emoji:"⚒️", title:"青銅の時代", kind:"飛躍",
+        story:"火の中で銅と錫が出会い、これまでにない硬い金属が生まれる。鋤は鋭くなり、道具という道具が一段上の世代へ。",
+        eff:"全建物の生産効率が永久にアップ"},
+      {id:"08", emoji:"⚖️", title:"はじめての法", kind:"報酬",
+        story:"王が石柱に掟を刻ませる。「目には目を」。強者の暴力に、初めて言葉が手綱をかけた。",
+        eff:"都市が安定し、生産ブースト＋人口上限増"},
+      {id:"09", emoji:"⛵", title:"大いなる交易", kind:"報酬",
+        story:"見知らぬ土地からの隊商が村を訪れる。余った穀物と、向こうの珍しい品を交換する。世界は、この村だけではなかった。",
+        eff:"手持ちの最も少ない資源が一気に補充される"}
+    ]
+  },
+  {
+    no:"第3時代 / AGE III", name:"中世", en:"THE AGE OF FAITH", emoji:"🏰",
+    tint:"#17181f", accent:"#8a9bbf", accent2:"#b08a7a",
+    tag:"中央の太陽が消えたあと、無数の小さな灯が、それぞれの場所で燃えはじめた。",
+    air:{
+      lead:"巨大な帝国が、ある日、その重さに耐えきれず崩れ落ちた。",
+      body:[
+        "光が消えたあと、人々は大きな都市を捨て、丘の上の砦に身を寄せた。世界は再び小さくなった。けれど、それは「後退」ではなかった。<b>人々は、新しいかたちの結びつきを発明していた</b>のだ。忠誠を誓う騎士、知識を守る修道士、広場に集まる商人と職人たち。",
+        "そしてこの時代、人々は遠くを見つめはじめる。城壁の向こう、海の向こう、地平の向こう。「ここではない、どこか」への渇きが、静かに、しかし確かに、世界中で高まっていた。"
+      ]
+    },
+    frags:[
+      {t:"石の城を築く者たち",x:"高い壁、深い堀、跳ね橋。城は、混乱の時代に「守る」という意志を石で表したもの。"},
+      {t:"時を刻む者たち",x:"修道院の塔に歯車仕掛けの時計。人は太陽ではなく、機械で時間を測りはじめた。"},
+      {t:"書物を写す者たち",x:"一文字ずつ古代の知恵を羊皮紙に写す。細い指先が、文明の記憶を闇の向こうへ運んだ。"},
+      {t:"羅針盤を握る者たち",x:"曇った海でも、針は北を知っている。地平の向こうへ意図して進む勇気。"}
+    ],
+    wonder:{emoji:"🏯", name:"グレートキープ", eff:"全生産 +25%（永久）",
+      text:"丘の頂に、難攻不落の天守。それは力の象徴であり、「ここは安全だ」という約束でもあった。城のまわりに市が立ち、職人が集まり、町が育つ。守りの拠点が、いつしか繁栄の中心地になる。混沌の時代に、城は秩序の島だった。"},
+    events:[
+      {id:"10", emoji:"💨", title:"水車と風車", kind:"飛躍", epoch:true,
+        story:"川のほとりに水車が回り、丘の上で風車が羽根を広げる。人や家畜の力に頼っていた粉挽きを、水と風が肩代わりする。世界で初めて、人は「自然そのものを働かせた」。",
+        eff:"木と食料の生産に大きな永久ボーナス（動力革命の萌芽）"},
+      {id:"11", emoji:"🎓", title:"大学の誕生", kind:"飛躍",
+        story:"写本を守ってきた者たちが集い、初めての「学びの場」を作る。知恵が、個人の宝から、人類の共有財産になりはじめた。",
+        eff:"以降の偉業ボーナスが底上げ／建設時間がさらに短縮"},
+      {id:"12", emoji:"☠️", title:"黒い災い", kind:"ピンチ",
+        story:"見えない病が交易路をたどって広がる。人口が大きく減る。だが生き延びた者たちは、少ない人手で多くを成す工夫を強いられた。",
+        eff:"一時減産。回復後、人手あたりの生産効率に永久ボーナス"},
+      {id:"13", emoji:"🧭", title:"羅針盤、北を指す", kind:"橋渡し",
+        story:"磁石の針が常に北を指す。地平の向こうは、もう未知の恐怖ではない。出ていける。帰ってこられる。",
+        eff:"交易・探索系のボーナス解放＋全資源ボーナス"},
+      {id:"14", emoji:"🎵", title:"吟遊詩人の来訪", kind:"報酬",
+        story:"旅の楽人が城下に立ち寄り、遠い国々の歌と物語を披露する。人々の心が遠くへ羽ばたく。",
+        eff:"民の士気が上がり、短時間の全生産ブースト"}
+    ]
+  },
+  {
+    no:"第4時代 / AGE IV", name:"ルネサンス", en:"THE REBIRTH", emoji:"⛪",
+    tint:"#1c1622", accent:"#9a7fc0", accent2:"#e0b54a",
+    tag:"自分の理性で、世界を測りなおす時代。",
+    air:{
+      lead:"何かが、目を覚ましつつあった。",
+      body:[
+        "忘れられていた古代の知恵が蘇り、同時にまったく新しいものも次々と生まれた。世界はにわかに「広く」「明るく」「鋭く」なった。きっかけは、ひとつの機械――<b>活版印刷</b>。考えが、火がつくように人から人へ広がっていく。",
+        "人々は問いはじめた。「本当にそうだろうか?」 星を観る者は望遠鏡を空に向け、画家は遠近法で世界の奥行きを描いた。そして海へ。羅針盤と新しい帆船を得た人々は、ついに地平の向こうへ漕ぎ出した。地図の余白が、次々と埋まっていく。"
+      ]
+    },
+    frags:[
+      {t:"印刷機を回す者たち",x:"一日で写本師の一年ぶんを刷る。情報革命の、最初の引き金。"},
+      {t:"空を測る者たち",x:"筒に磨いたガラスをはめ夜空に向ける。世界の中心は、自分たちの足元ではなかった。"},
+      {t:"海図を描く者たち",x:"命がけの航海から持ち帰った沿岸線。未知が既知に変わっていく快感。"},
+      {t:"遠近法を操る者たち",x:"平らな壁に奥行きのある世界を。芸術が「もうひとつの現実」になった瞬間。"}
+    ],
+    wonder:{emoji:"🗼", name:"大鐘楼", eff:"全生産 +30%（永久）",
+      text:"広場の中心に、空を衝く鐘楼。その鐘は、市の開始を、議会の招集を、祝祭を告げた。人々は同じ鐘で目覚め、同じ鐘で働き、同じ鐘で集う。時間で結ばれた市民の誕生。知と自由と自治が花開く、新しい時代のシンボル。"},
+    events:[
+      {id:"15", emoji:"🖨️", title:"活版印刷", kind:"飛躍", epoch:true,
+        story:"職人が、金属の活字を組み替え可能にする仕掛けを完成させる。最初の一冊が刷り上がった瞬間、彼は悟る。「これは、世界を変える」。",
+        eff:"知識生産が爆発。偉業ボーナスと建設速度に、最大級の永久強化"},
+      {id:"16", emoji:"🌊", title:"大航海", kind:"飛躍",
+        story:"幾隻もの帆船が港を出ていく。数ヶ月後、戻った船は、見たこともない作物、金銀、香料、そして「地図の新しい一片」を積んでいた。",
+        eff:"一度きりの巨大な資源流入＋交易ボーナス恒常化"},
+      {id:"17", emoji:"🔭", title:"天動説、ひっくり返る", kind:"橋渡し",
+        story:"学者が宣言する。「世界の中心は我々ではない。地が、天をめぐっているのだ」。人々の世界観が、根底から覆る。",
+        eff:"研究系の永久ボーナス＋次の時代への要求が緩和"},
+      {id:"18", emoji:"🎨", title:"芸術の黄金期", kind:"報酬",
+        story:"工房という工房から、後世に名を残す傑作が次々と生まれる。人間の手わざが、神の御業に迫ろうとした時代。",
+        eff:"都市の威信が高まり、全生産ブースト＋人口上限増"},
+      {id:"19", emoji:"🎁", title:"遠い国からの贈り物", kind:"報酬",
+        story:"大使を名乗る一団が、見たこともない品々を携えてやってくる。珍しい種、未知の技術書、異国の楽器。",
+        eff:"ランダムな大きめ資源ボーナス＋小さな永久強化"}
+    ]
+  },
+  {
+    no:"第5時代 / AGE V", name:"産業時代", en:"THE MACHINE", emoji:"🏭",
+    tint:"#191b1d", accent:"#9aa3ac", accent2:"#c47f3a",
+    tag:"人類は、自分で起こせる、無尽蔵の力を手にした。",
+    air:{
+      lead:"ある日、世界の音が変わった。",
+      body:[
+        "それまで暮らしを満たしていたのは自然の音だった。風、水、職人の槌。だがいま、それらをかき消す新しい音が響く――<b>シュッ、シュッ、ガシャン。</b> 蒸気の音、ピストンの音、眠らない機械の鼓動だ。",
+        "工場が建ち、煙突が天を突く。何十人がかりで何日もかけた布や道具が、機械によって一日で山と積み上がる。鉄の道が大地に敷かれ、鉄の馬が煙を吐いて走る。豊かさが膨れ上がり、同時に煤煙が空を汚した。光が強くなれば、影も濃くなる。それでも人類は、もうこの力を手放せなかった。"
+      ]
+    },
+    frags:[
+      {t:"蒸気を飼いならす者たち",x:"水を沸かし、膨らむ力でピストンを押す。やがてその力は、世界そのものを動かす。"},
+      {t:"鉄路を敷く者たち",x:"鉄のレールの上を蒸気機関車が走る。距離が、意味を失っていく。"},
+      {t:"電気を捕まえる者たち",x:"針金の中を、目に見えない流れが走る。夜は、灯りそのもので照らされる。"},
+      {t:"声を遠くへ飛ばす者たち",x:"銅線を伝って符号が瞬時に届く。世界が、神経網でつながりはじめる。"}
+    ],
+    wonder:{emoji:"🌉", name:"大鉄橋", eff:"全生産 +40%（永久）",
+      text:"深い渓谷に、鉄でできた巨大な橋。かつて何日もの迂回を要した対岸が、いまや一またぎ。それは「もはや、地形は運命ではない」という宣言だった。山を貫き、谷を渡し――人類は、地球の形そのものを作り変えはじめた。"},
+    events:[
+      {id:"20", emoji:"🚂", title:"蒸気機関", kind:"飛躍", epoch:true,
+        story:"鉱山の片隅で動いていた奇妙な装置が、改良を重ね、ついに実用の動力となる。疲れず、眠らず、薪と石炭さえあれば永遠に働く。「人類は、もう自分の腕の長さに縛られない」。",
+        eff:"全生産が劇的に永久増加。レートが大きく跳ね上がる"},
+      {id:"21", emoji:"🛤️", title:"鉄道開通", kind:"飛躍",
+        story:"遠い二つの町を結ぶ鉄路が開通する。馬車で十日の道のりが、わずか一日に。人々は時刻表という新しい時間の感覚を手にする。",
+        eff:"全資源の運搬効率に永久ボーナス＋一度きりの大量流入"},
+      {id:"22", emoji:"💡", title:"電気の灯", kind:"飛躍",
+        story:"ガラス球の中のフィラメントに電気を通す。ちらつき、そして――灯る。やがて街路に、消えない光が広がる。人類は、夜を征服した。",
+        eff:"昼夜を問わぬ稼働で生産に永久ボーナス（夜景が変化）"},
+      {id:"23", emoji:"📡", title:"電信、世界を結ぶ", kind:"橋渡し",
+        story:"海底ケーブルを通じて、大陸の向こうへ瞬時にメッセージが届く。情報が、初めて移動を必要としなくなった。",
+        eff:"知識・交易の永久ボーナス＋次の時代への要求が緩和"},
+      {id:"24", emoji:"🎡", title:"万国博覧会", kind:"報酬",
+        story:"世界中の発明と産物が、ひとつの巨大な会場に集められる。人々は未来を一目見ようと殺到する。",
+        eff:"国家の威信が高まり、大きめの全生産ブースト＋人口増"}
+    ]
+  },
+  {
+    no:"第6時代 / AGE VI", name:"現代", en:"THE CONNECTED WORLD", emoji:"🏙️",
+    tint:"#101a22", accent:"#4a90d9", accent2:"#5fd0c0",
+    tag:"点から始まったものが、ついに星へ届く。",
+    air:{
+      lead:"空に、人が浮かんでいる。",
+      body:[
+        "かつて鳥だけのものだった空を、いま鉄の翼が横切る。声は線すら必要とせず、地球の裏側へ届く。手のひらに乗る小さな板の中に、図書館いっぱいの知識が収まる。これは<b>速度と接続の時代</b>だ。",
+        "人類は、ついに自分の星から飛び立った。月に足跡を残し、青く輝く地球をふり返って見た。「我々は、こんなにも小さな球の上で、ずっと積み上げてきたのか」。序章で焚き火を囲んでいた数人の村は、いま、数十億の人々を抱く文明になった。"
+      ]
+    },
+    frags:[
+      {t:"空を飛ぶ者たち",x:"翼の形と、前へ進む力。それだけで人は重力を振り切った。"},
+      {t:"電子を操る者たち",x:"無数の小さなスイッチが、爪の先ほどの石(チップ)に。計算する機械が思考を拡張する。"},
+      {t:"網をかける者たち",x:"世界中の計算機を一本の網で。人類が、ひとつの巨大な「集合知」になりはじめた。"},
+      {t:"星へ手を伸ばす者たち",x:"炎を噴く塔が人を宇宙へ。人類は「宇宙の生き物」になろうとしている。"}
+    ],
+    wonder:{emoji:"🗽", name:"自由の像", eff:"全生産 +50%（永久）",
+      text:"港の入り口に、たいまつを掲げた巨大な像。特定の王や神のためではない。新しい暮らしを夢見るすべての人を迎えるための像だ。「誰もが、より良い明日を求めて歩いてよい」――人類がようやくたどり着いた理想。あなたの帝国は、ついに「自由」を誇りとして掲げた。"},
+    events:[
+      {id:"25", emoji:"✈️", title:"初飛行", kind:"飛躍",
+        story:"海辺の砂丘で、布と木でできた機械が数秒間、宙に浮いた。たった数十メートル。だがその数秒で、何万年も地に縛られてきた人類は、空のものになった。",
+        eff:"交易・探索の永久ボーナス＋全資源の流入"},
+      {id:"26", emoji:"💻", title:"コンピューターの誕生", kind:"飛躍", epoch:true,
+        story:"部屋いっぱいの計算機械が、人間なら一生かかる計算を一晩で終える。やがて小さくなり、手のひらに収まる。人類は、考えることそのものを拡張する道具を得た。",
+        eff:"全生産が劇的に永久増加。レートが大きく跳ねる"},
+      {id:"27", emoji:"🌐", title:"世界をつなぐ網", kind:"飛躍",
+        story:"世界中の計算機が一本の網でつながる。知識は瞬時に共有され、発見の速度が桁違いになる。",
+        eff:"知識生産が爆発。全偉業ボーナスと建設速度に最大級の永久強化"},
+      {id:"28", emoji:"🌕", title:"月への一歩", kind:"クライマックス",
+        story:"炎を噴く塔が人を宇宙へ運び、ついに別の天体に人類の足跡が刻まれる。月から見下ろした地球は、国境のない、青い一粒の宝石だった。「我々は、ひとつだ」。",
+        eff:"全生産に永続ボーナス（文明の到達点）。特別な祝祭演出"},
+      {id:"29", emoji:"🌱", title:"再生可能エネルギー", kind:"飛躍",
+        story:"煤煙の代償を知った人々は、太陽と風と水から汚さない力を取り出す。成長と、星の健康を両立させようとする試み。",
+        eff:"生産レートに永久ボーナス（持続可能な繁栄）"},
+      {id:"30", emoji:"🚀", title:"星々へ", kind:"エンド",
+        story:"帝国は、ひとつの星に収まりきらなくなった。新しい船が、まだ名前のない星をめざして旅立つ。かつて、空に名前のない星がめぐっていた、あの最初の夜のように。物語は円環を閉じ、次の輪を開く。",
+        eff:"「次の世界」へのプレステージ要素（周回／恒星間文明への布石）"}
+    ]
+  }
+];
+
+const EPILOGUE = {
+  kicker:"EPILOGUE — 終章",
+  title:"名前を持った世界",
+  lead:"最初、世界には名前がなかった。",
+  body:[
+    "星にも、川にも、大地にも。それがいま、星には名がつけられ、その動きは予言され、人はそこへ船を送る。川には橋が架かり、流れは灯りに変えられる。大地は地図に描かれ、鉄路で結ばれ、空からも見下ろされる。",
+    "世界を変えたのは、強い爪でも、鋭い牙でもなかった。あの夜、焚き火のまわりで芽生えた、ささやかな<b>「覚える力」</b>――昨日を記憶し、明日を思い、まだ見ぬ地平へ手を伸ばす、その一点だった。",
+    "これは、ひとつの村が世界を抱く帝国になる物語だった。だが本当のところ、これは「明日を信じることをやめなかった者たち」の物語だ。"
+  ]
+};
+
+/* ===== レンダリング ===== */
+const esc = s => s; // 内容は信頼済み（HTMLタグ込み）
+function chapterBlock(c){
+  return `
+  <div class="rv"><div class="kicker">${c.kicker}</div></div>
+  <h2 class="mincho rv" style="font-size:clamp(30px,6vw,52px); color:#fff; letter-spacing:.06em; margin-bottom:6px;">${c.title}</h2>
+  <div class="rule" style="margin-left:0;"></div>
+  <div class="air" style="margin-top:28px;">
+    <p class="lead mincho rv">${c.lead}</p>
+    ${c.body.map(p=>`<p class="rv">${p}</p>`).join("")}
+  </div>`;
+}
+
+let html = "";
+
+// 序章
+html += `<section class="pad" data-tint="#1a1410" data-accent="#c97b3c" data-nav="序章">${chapterBlock(PROLOGUE)}</section>`;
+
+// 各時代
+ERAS.forEach((e,i)=>{
+  // タイトルカード
+  html += `<section class="titlecard" data-tint="${e.tint}" data-accent="${e.accent}" data-accent2="${e.accent2}" data-nav="${e.name}">
+    <div class="era-no rv">${e.no}</div>
+    <div class="big-emoji rv blur">${e.emoji}</div>
+    <h2 class="mincho rv">${e.name}</h2>
+    <div class="era-en rv">${e.en}</div>
+    <div class="era-tag mincho rv">「${e.tag}」</div>
+    <div class="rule rv"></div>
+  </section>`;
+
+  // 本文（空気・かけら・偉業・イベント）
+  html += `<section class="pad" data-tint="${e.tint}" data-accent="${e.accent}" data-accent2="${e.accent2}">
+    <div class="rv"><div class="kicker">時代の空気 — THE MOOD</div></div>
+    <div class="air">
+      <p class="lead mincho rv">${e.air.lead}</p>
+      ${e.air.body.map(p=>`<p class="rv">${p}</p>`).join("")}
+    </div>
+
+    <div class="rv" style="margin-top:46px;"><div class="kicker">きらめく文明のかけら — FRAGMENTS</div></div>
+    <div class="frags">
+      ${e.frags.map(f=>`<div class="frag rv"><div class="ft">${f.t}</div><div class="fx">${f.x}</div></div>`).join("")}
+    </div>
+
+    <div class="rv" style="margin-top:46px;"><div class="kicker">偉業 — THE WONDER</div></div>
+    <div class="wonder rv blur">
+      <div class="we">${e.wonder.emoji}</div>
+      <div class="wn">${e.wonder.name}</div>
+      <div class="wtext">${e.wonder.text}</div>
+      <div class="weff">✦ ${e.wonder.eff}</div>
+    </div>
+
+    <div class="rv" style="margin-top:46px;"><div class="kicker">エポックメイキング — THE EVENTS</div></div>
+    <div class="events">
+      ${e.events.map(ev=>`
+        <div class="ev rv ${ev.epoch?'epoch':''}">
+          <div class="ehead">
+            <div class="eemoji">${ev.emoji}</div>
+            <div class="etitle">${ev.title}</div>
+            <div class="ekind k-${ev.kind}" style="margin-left:auto;">${ev.kind}</div>
+          </div>
+          <div class="estory">${ev.story}</div>
+          <div class="eeff">${ev.eff}</div>
+        </div>`).join("")}
+    </div>
+  </section>`;
+});
+
+// 終章
+html += `<section class="pad" data-tint="#101a22" data-accent="#5fd0c0" data-nav="終章">
+  <div style="text-align:center; margin-bottom:10px;"><span class="star rv">✦</span></div>
+  ${chapterBlock(EPILOGUE)}
+</section>`;
+
+document.getElementById("story").innerHTML = html;
+
+/* ===== embers (hero) ===== */
+(function(){
+  const box=document.getElementById("embers");
+  for(let i=0;i<28;i++){
+    const e=document.createElement("div"); e.className="ember";
+    const dur=6+Math.random()*8;
+    e.style.left=(Math.random()*100)+"%";
+    e.style.setProperty("--dx",(Math.random()*60-30)+"px");
+    e.style.animationDuration=dur+"s";
+    e.style.animationDelay=(-Math.random()*dur)+"s";
+    const sc=.5+Math.random()*1.6; e.style.transform=`scale(${sc})`;
+    box.appendChild(e);
+  }
+})();
+
+/* ===== reveal on scroll ===== */
+const io=new IntersectionObserver((ents)=>{
+  ents.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); } });
+},{threshold:.18, rootMargin:"0px 0px -8% 0px"});
+function observeReveals(){ document.querySelectorAll(".rv:not(.in)").forEach((el,i)=>{
+  el.style.transitionDelay=((i%6)*0.06)+"s"; io.observe(el); }); }
+observeReveals();
+
+/* ===== 背景の色を、いま画面中央にある時代に合わせて変える ===== */
+const tintEls=[...document.querySelectorAll("[data-tint]")];
+const bgfx=document.getElementById("bgfx");
+const root=document.documentElement;
+function updateTint(){
+  const mid=window.innerHeight/2;
+  let cur=tintEls[0];
+  for(const el of tintEls){
+    const r=el.getBoundingClientRect();
+    if(r.top<=mid && r.bottom>=mid){ cur=el; break; }
+    if(r.top<=mid) cur=el;
+  }
+  root.style.setProperty("--tint", cur.dataset.tint);
+  root.style.setProperty("--accent", cur.dataset.accent);
+  if(cur.dataset.accent2) root.style.setProperty("--accent2", cur.dataset.accent2);
+}
+
+/* ===== 進捗バー＋ナビ ===== */
+const prog=document.getElementById("prog");
+const navEls=[...document.querySelectorAll("[data-nav]")];
+const nav=document.getElementById("nav");
+navEls.forEach((el,i)=>{ const a=document.createElement("a");
+  a.href="#"; a.dataset.i=i;
+  a.innerHTML=`<span>${el.dataset.nav}</span>`;
+  a.onclick=(ev)=>{ ev.preventDefault(); el.scrollIntoView({behavior:"smooth"}); };
+  nav.appendChild(a);
+});
+const navDots=[...nav.children];
+function updateNav(){
+  const mid=window.innerHeight/2; let active=0;
+  navEls.forEach((el,i)=>{ if(el.getBoundingClientRect().top<=mid) active=i; });
+  navDots.forEach((d,i)=>d.classList.toggle("active", i===active));
+}
+
+let ticking=false;
+function onScroll(){
+  if(ticking) return; ticking=true;
+  requestAnimationFrame(()=>{
+    const h=document.documentElement.scrollHeight-window.innerHeight;
+    prog.style.width=(window.scrollY/h*100)+"%";
+    updateTint(); updateNav(); ticking=false;
+  });
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+window.addEventListener("resize", onScroll);
+onScroll();
+</script>
+</body>
+</html>

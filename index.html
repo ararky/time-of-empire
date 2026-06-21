@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Time of Empire</title>
+<style>
+  :root{
+    --bg:#f4ead5; --panel:#fffaf0; --ink:#4a3b28; --line:#d8c7a6;
+    --accent:#c97b3c; --accent2:#7a9a5b; --gold:#e0b54a;
+    --shadow:0 4px 0 rgba(0,0,0,.08), 0 8px 24px rgba(74,59,40,.12);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;
+    background:var(--bg); color:var(--ink);
+    min-height:100vh; display:flex; justify-content:center;
+    transition:background .8s ease;
+  }
+  #app{width:100%; max-width:480px; padding:14px 14px 40px; position:relative;}
+
+  /* header */
+  header{text-align:center; margin-bottom:10px;}
+  .age-badge{
+    display:inline-block; font-size:12px; letter-spacing:.1em;
+    background:var(--ink); color:var(--bg); padding:3px 12px; border-radius:20px;
+    margin-bottom:6px;
+  }
+  h1{font-size:20px; margin:2px 0 2px; letter-spacing:.04em; color:#9a8a6c; font-weight:800;}
+  .empire-name{
+    display:inline-block; margin:4px 0 3px; font-size:18px; font-weight:900;
+    color:var(--ink); background:#fff; border:2px solid var(--line);
+    border-radius:22px; padding:5px 16px; cursor:pointer; transition:transform .05s;
+  }
+  .empire-name:active{transform:scale(.97);}
+  .empire-name.unset{font-size:14px; color:var(--accent); border-style:dashed; animation:hintPulse 2s ease-in-out infinite;}
+  .age-name{font-size:13px; color:var(--accent); font-weight:700;}
+
+  /* name dialog */
+  #nameDialog{
+    position:fixed; inset:0; background:rgba(40,28,12,.6); z-index:50;
+    display:none; align-items:center; justify-content:center; padding:24px;
+  }
+  #nameDialog.show{display:flex; animation:fade .3s ease;}
+  .name-box{
+    background:var(--panel); border:3px solid var(--ink); border-radius:18px;
+    padding:22px; width:100%; max-width:340px; text-align:center; box-shadow:var(--shadow);
+  }
+  .name-box h3{margin:0 0 4px; font-size:17px;}
+  .name-box p{margin:0 0 14px; font-size:12px; color:#9a8a6c;}
+  .name-box input{
+    width:100%; font-size:16px; padding:11px 12px; border:2px solid var(--line);
+    border-radius:10px; font-family:inherit; text-align:center; box-sizing:border-box;
+  }
+  .name-box input:focus{outline:none; border-color:var(--accent2);}
+  .name-box .row{display:flex; gap:8px; margin-top:14px;}
+  .name-box button{flex:1; border:none; border-radius:10px; padding:11px; font-weight:800; font-family:inherit; cursor:pointer;}
+  .name-box .ok{background:var(--accent2); color:#fff; box-shadow:0 3px 0 #5e7a45;}
+  .name-box .ok:active{transform:translateY(2px); box-shadow:0 1px 0 #5e7a45;}
+  .name-box .cancel{background:#eee4cf; color:#9a8a6c;}
+
+  /* village scene */
+  #scene{
+    background:linear-gradient(180deg,#bfe0f0 0%,#dff0d8 55%,#cdb487 55%,#c2a878 100%);
+    border:3px solid var(--ink); border-radius:16px;
+    height:150px; margin:10px 0; overflow:hidden; position:relative;
+    box-shadow:var(--shadow); cursor:pointer; user-select:none;
+  }
+  #scene:active{filter:brightness(1.04);}
+  .tap-hint{
+    position:absolute; bottom:6px; left:0; right:0; text-align:center;
+    font-size:11px; color:rgba(74,59,40,.55); font-weight:700; pointer-events:none;
+    animation:hintPulse 2s ease-in-out infinite;
+  }
+  @keyframes hintPulse{0%,100%{opacity:.4}50%{opacity:.85}}
+  .gather-float{
+    position:absolute; font-size:16px; font-weight:800; color:#4a3b28;
+    pointer-events:none; z-index:5; text-shadow:0 1px 2px rgba(255,255,255,.8);
+    animation:gfloat .9s ease-out forwards;
+  }
+  @keyframes gfloat{0%{opacity:0; transform:translateY(6px) scale(.7);}20%{opacity:1;}100%{opacity:0; transform:translateY(-34px) scale(1.1);}}
+  .gather-float.crit{font-weight:900; color:#e0992a; text-shadow:0 2px 7px rgba(255,200,90,.95);}
+  /* combo badge */
+  .combo-badge{
+    position:absolute; top:6px; left:0; right:0; text-align:center; z-index:6;
+    pointer-events:none; color:#e8642c; font-weight:900; line-height:1;
+    text-shadow:0 2px 8px rgba(255,190,110,.85); opacity:0;
+    transition:opacity .15s ease; transform-origin:center top;
+  }
+  .combo-badge.show{opacity:1; animation:comboPop .18s ease;}
+  @keyframes comboPop{0%{transform:scale(1.4)}100%{transform:scale(1)}}
+  .combo-badge .n{font-size:34px; display:block;}
+  .combo-badge .lbl{font-size:11px; letter-spacing:.28em; font-weight:800;}
+  .combo-badge.record{color:#d4a017 !important;}
+  /* 最高コンボ記録チップ */
+  .best-combo{position:absolute; top:8px; left:10px; z-index:6; pointer-events:none;
+    font-size:11px; font-weight:800; color:rgba(74,59,40,.55);}
+  .best-combo.flash{animation:bestFlash .5s ease;}
+  @keyframes bestFlash{0%{transform:scale(1); color:#d4a017;}40%{transform:scale(1.35); color:#e8642c;}100%{transform:scale(1);}}
+  /* crit screen shake + flash */
+  @keyframes shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-5px,2px)}40%{transform:translate(5px,-2px)}60%{transform:translate(-4px,-1px)}80%{transform:translate(4px,1px)}}
+  #scene.shake{animation:shake .4s;}
+  .crit-flash{position:absolute; inset:0; background:radial-gradient(circle,rgba(255,220,120,.55),transparent 65%); pointer-events:none; z-index:4; animation:critFlash .45s ease-out forwards;}
+  @keyframes critFlash{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
+  /* FEVER モード */
+  #scene.fever{animation:feverGlow .5s ease-in-out infinite alternate;}
+  #scene.fever::before{content:""; position:absolute; inset:0; z-index:3; pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,90,40,.18),rgba(255,200,60,.12)); animation:feverHue .6s linear infinite;}
+  @keyframes feverGlow{from{box-shadow:var(--shadow);}to{box-shadow:0 0 26px 5px rgba(255,140,20,.85);}}
+  @keyframes feverHue{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(20deg)}}
+  .fever-banner{position:absolute; top:38%; left:0; right:0; text-align:center; z-index:8;
+    font-size:30px; font-weight:900; color:#fff; letter-spacing:.08em; pointer-events:none;
+    text-shadow:0 0 14px #ff6a00, 0 2px 4px rgba(0,0,0,.35); animation:feverBanner .55s ease;}
+  @keyframes feverBanner{0%{transform:scale(0) rotate(-10deg); opacity:0;}60%{transform:scale(1.3);}100%{transform:scale(1); opacity:1;}}
+  .fever-bar{position:absolute; bottom:0; left:0; height:6px; z-index:8;
+    background:linear-gradient(90deg,#ff5e3a,#ffd34a); box-shadow:0 0 8px #ff7a00; transition:width .12s linear;}
+  .fever-result{position:absolute; top:32%; left:0; right:0; text-align:center; z-index:8; pointer-events:none;
+    color:#5a3d12; font-weight:900; text-shadow:0 1px 3px rgba(255,255,255,.9); animation:feverResult 2.6s ease forwards;}
+  .fever-result .big{display:block; font-size:15px; letter-spacing:.08em; color:#e8642c;}
+  .fever-result .got{display:block; font-size:19px; margin-top:3px;}
+  @keyframes feverResult{0%{opacity:0; transform:translateY(10px) scale(.8);}12%{opacity:1; transform:translateY(0) scale(1.12);}22%{transform:scale(1);}80%{opacity:1;}100%{opacity:0; transform:translateY(-14px);}}
+  #village{
+    position:absolute; bottom:8px; left:0; right:0;
+    display:flex; flex-wrap:wrap; align-content:flex-end; justify-content:center;
+    gap:1px 3px; padding:0 8px; font-size:22px; line-height:1;
+  }
+  #village span{animation:pop .4s ease;}
+  .sun{position:absolute; top:10px; right:16px; font-size:28px; filter:drop-shadow(0 0 8px #ffe9a0);}
+  @keyframes pop{0%{transform:scale(0) translateY(8px);}70%{transform:scale(1.25);}100%{transform:scale(1);}}
+
+  /* resources */
+  #resources{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px;
+  }
+  .res{
+    background:var(--panel); border:2px solid var(--line); border-radius:12px;
+    padding:6px 2px; text-align:center;
+  }
+  .res .ic{font-size:20px;}
+  .res .val{font-weight:800; font-size:15px; font-variant-numeric:tabular-nums;}
+  .res .rate{font-size:10px; color:var(--accent2); height:12px;}
+  .res .rate.zero{color:#b3a890;}
+
+  /* buildings */
+  .section-title{font-size:12px; color:#9a8a6c; margin:14px 2px 6px; letter-spacing:.08em;}
+  .bld{
+    background:var(--panel); border:2px solid var(--line); border-radius:14px;
+    padding:10px 12px; margin-bottom:8px; display:flex; align-items:center; gap:10px;
+    box-shadow:0 2px 0 rgba(0,0,0,.04);
+  }
+  .bld .emoji{font-size:30px; width:38px; text-align:center;}
+  .bld .info{flex:1; min-width:0;}
+  .bld .name{font-weight:800; font-size:14px;}
+  .bld .lv{font-size:11px; color:var(--accent); font-weight:700;}
+  .bld .desc{font-size:11px; color:#9a8a6c; margin-top:1px;}
+  .bld button{
+    border:none; border-radius:10px; padding:9px 12px; min-width:92px;
+    font-weight:800; font-size:12px; cursor:pointer; color:#fff;
+    background:var(--accent2); box-shadow:0 3px 0 #5e7a45; transition:transform .05s;
+    font-family:inherit;
+  }
+  .bld button:active{transform:translateY(2px); box-shadow:0 1px 0 #5e7a45;}
+  .bld button.locked{background:#cabfa6; box-shadow:0 3px 0 #b3a78c; cursor:not-allowed;}
+  .bld button .cost{display:block; font-size:10px; font-weight:600; opacity:.95; margin-top:1px;}
+
+  /* wonder */
+  .wonder-card{
+    background:linear-gradient(180deg,#fff7e6,#fbeecb); border:2px solid var(--gold);
+    border-radius:14px; padding:12px; box-shadow:0 2px 0 rgba(180,140,40,.18);
+  }
+  .wonder-card.built{background:linear-gradient(180deg,#f0f6e8,#e4efd4); border-color:var(--accent2);}
+  .wonder-top{display:flex; align-items:center; gap:10px;}
+  .wonder-top .emoji{font-size:34px; width:42px; text-align:center;}
+  .wonder-top .info{flex:1; min-width:0;}
+  .wonder-top .name{font-weight:800; font-size:15px;}
+  .wonder-top .eff{font-size:11px; color:#a07a20; font-weight:700; margin-top:1px;}
+  .wonder-card.built .eff{color:#5e7a45;}
+  .wonder-top button{
+    border:none; border-radius:10px; padding:9px 12px; min-width:96px;
+    font-weight:800; font-size:12px; cursor:pointer; color:#5a3d12; font-family:inherit;
+    background:linear-gradient(180deg,#f5d573,#e0b54a); box-shadow:0 3px 0 #b98e2a;
+  }
+  .wonder-top button:active{transform:translateY(2px); box-shadow:0 1px 0 #b98e2a;}
+  .wonder-top button.locked{background:#e7ddc4; color:#a99a78; box-shadow:0 3px 0 #cbbfa0; cursor:not-allowed;}
+  .wonder-top button .cost{display:block; font-size:10px; font-weight:600; margin-top:1px;}
+  .wbar{height:10px; border-radius:6px; background:#e7dcc0; margin-top:10px; overflow:hidden;}
+  .wbar > div{height:100%; background:linear-gradient(90deg,#e0b54a,#f5d573); width:0; transition:width 1s linear;}
+  .wbar-label{font-size:11px; color:#a07a20; font-weight:700; margin-top:5px; text-align:center;}
+  .wonder-done-badge{font-size:11px; color:#5e7a45; font-weight:800; white-space:nowrap;}
+
+  /* advance age */
+  #advance{
+    width:100%; border:none; border-radius:14px; padding:14px; margin-top:16px;
+    font-weight:900; font-size:15px; color:#5a3d12; font-family:inherit;
+    background:linear-gradient(180deg,#f5d573,#e0b54a); box-shadow:0 4px 0 #b98e2a;
+    cursor:pointer; letter-spacing:.05em;
+  }
+  #advance:active{transform:translateY(2px); box-shadow:0 2px 0 #b98e2a;}
+  #advance.locked{background:#e7ddc4; color:#a99a78; box-shadow:0 4px 0 #cbbfa0; cursor:not-allowed;}
+  #advance .req{display:block; font-size:11px; font-weight:600; margin-top:3px;}
+
+  .pop{
+    text-align:center; font-size:12px; color:#8a7a5c; margin:10px 0 2px; font-weight:700;
+  }
+
+  /* welcome-back toast */
+  #toast{
+    position:fixed; top:14px; left:50%; transform:translateX(-50%) translateY(-120%);
+    background:var(--ink); color:var(--bg); padding:10px 18px; border-radius:30px;
+    font-size:13px; font-weight:700; box-shadow:var(--shadow); z-index:30;
+    transition:transform .5s cubic-bezier(.2,1.4,.4,1); max-width:90%; text-align:center;
+  }
+  #toast.show{transform:translateX(-50%) translateY(0);}
+
+  /* age-up celebration overlay */
+  #celebrate{
+    position:fixed; inset:0; background:rgba(40,28,12,.78); z-index:40;
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    color:#fff; text-align:center; padding:24px;
+  }
+  #celebrate.show{display:flex; animation:fade .4s ease;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  #celebrate .big{font-size:64px; animation:pop .6s ease;}
+  #celebrate .label{font-size:13px; letter-spacing:.3em; color:var(--gold); margin-top:14px;}
+  #celebrate .newage{font-size:30px; font-weight:900; margin:6px 0 4px;}
+  #celebrate .sub{font-size:13px; opacity:.85;}
+  #celebrate button{
+    margin-top:26px; border:none; border-radius:30px; padding:12px 34px;
+    font-weight:900; font-size:15px; background:var(--gold); color:#5a3d12;
+    cursor:pointer; font-family:inherit;
+  }
+  .spark{position:absolute; font-size:24px; animation:rise 1.2s ease forwards;}
+  @keyframes rise{0%{opacity:0; transform:translateY(20px) scale(.5);}30%{opacity:1;}100%{opacity:0; transform:translateY(-80px) scale(1.2);}}
+
+  footer{text-align:center; font-size:10px; color:#b3a890; margin-top:24px;}
+  footer a{color:#b3a890;}
+  .reset{background:none; border:none; color:#c0b298; font-size:11px; text-decoration:underline; cursor:pointer; margin-top:8px;}
+  .snd-toggle{position:absolute; top:14px; right:14px; z-index:20;
+    width:38px; height:38px; border-radius:50%; border:2px solid var(--line);
+    background:#fff; font-size:16px; cursor:pointer; line-height:1; padding:0;
+    box-shadow:0 2px 0 rgba(0,0,0,.05);}
+  .snd-toggle:active{transform:translateY(1px);}
+</style>
+</head>
+<body>
+<div id="app">
+  <button id="soundToggle" class="snd-toggle" title="音のオン/オフ">🔊</button>
+  <header>
+    <div class="age-badge" id="ageBadge">第1時代</div>
+    <h1>Time of Empire</h1>
+    <div class="empire-name unset" id="empireName">＋ 帝国に名前をつける</div>
+    <div class="age-name" id="ageName">原始時代</div>
+  </header>
+
+  <div id="scene">
+    <div class="sun" id="sun">☀️</div>
+    <div id="village"></div>
+    <div class="best-combo" id="bestCombo"></div>
+    <div class="combo-badge" id="comboBadge"><span class="n">0</span><span class="lbl">COMBO</span></div>
+    <div class="tap-hint" id="tapHint">タップで採取 👆</div>
+  </div>
+
+  <div id="resources"></div>
+
+  <div class="pop" id="popLine">人口 0 / 5</div>
+
+  <div class="section-title">たてもの</div>
+  <div id="buildings"></div>
+
+  <div class="section-title">偉業（ワンダー）</div>
+  <div id="wonder"></div>
+
+  <button id="advance" class="locked">
+    ⏳ 次の時代へ
+    <span class="req" id="advReq"></span>
+  </button>
+
+  <div class="pop" id="hint" style="margin-top:18px; color:#a99a78;"></div>
+
+  <footer>
+    Time of Empire — <span id="saveStatus">📁 ローカル保存</span>
+    <br><button class="reset" id="reset">最初からやり直す</button>
+  </footer>
+</div>
+
+<div id="toast"></div>
+
+<div id="nameDialog">
+  <div class="name-box">
+    <h3>帝国の名前は？</h3>
+    <p>あなたの帝国に名前をつけよう（16文字まで）</p>
+    <input id="nameInput" type="text" maxlength="16" placeholder="例：さくら帝国">
+    <div class="row">
+      <button class="cancel" id="nameCancel">あとで</button>
+      <button class="ok" id="nameOk">決定</button>
+    </div>
+  </div>
+</div>
+
+<div id="celebrate">
+  <div class="big" id="celEmoji">🏛️</div>
+  <div class="label">NEW AGE</div>
+  <div class="newage" id="celName">古代</div>
+  <div class="sub" id="celSub">生産力がアップした！</div>
+  <button id="celClose">国を見る</button>
+</div>
+
+<script>
+/* ===== ゲームデータ ===== */
+const AGES = [
+  {name:"原始時代",   emoji:"🛖", mult:1,   bg:"#f4ead5", need:0},
+  {name:"古代",       emoji:"🏛️", mult:2.2, bg:"#ede3c8", need:8},
+  {name:"中世",       emoji:"🏰", mult:5,   bg:"#e4ddd0", need:20},
+  {name:"ルネサンス", emoji:"⛪", mult:11,  bg:"#e6e0e8", need:40},
+  {name:"産業時代",   emoji:"🏭", mult:25,  bg:"#dcdde0", need:70},
+  {name:"現代",       emoji:"🏙️", mult:60,  bg:"#d6e2ea", need:110},
+];
+
+const RES = [
+  {id:"wood",  ic:"🪵", name:"木"},
+  {id:"food",  ic:"🍖", name:"食料"},
+  {id:"stone", ic:"🪨", name:"石"},
+];
+
+// 建物: prod=毎秒生産(レベルあたり), 建設に人口を使う production系か判定
+const BLD = [
+  {id:"house",  emoji:"🏠", name:"家",        desc:"人口の上限 +3",        prod:null,                pop:+3},
+  {id:"lumber", emoji:"🌲", name:"きこり小屋", desc:"木を生産",             prod:{wood:0.5},          pop:-1},
+  {id:"farm",   emoji:"🌾", name:"畑",        desc:"食料を生産",           prod:{food:0.5},          pop:-1},
+  {id:"quarry", emoji:"⛏️", name:"採石場",     desc:"石を生産",             prod:{stone:0.35},        pop:-1},
+];
+
+const BASE_COST = {
+  house:  {wood:10, stone:5},
+  lumber: {wood:8,  food:4},
+  farm:   {wood:6,  food:0, stone:2},
+  quarry: {wood:12, stone:6},
+};
+const COST_GROWTH = 1.55; // レベルごとにコスト増
+
+// ワンダー(偉業): 各時代に1つ。資源を払って着工→実時間で完成→生産+bonus(永久)
+// mins=完成までの実時間(分), bonus=全生産への加算倍率(0.15 = +15%)
+const WONDERS = [
+  {age:0, emoji:"🗿", name:"巨石像",        cost:{wood:60,  stone:40},            mins:1,  bonus:0.15},
+  {age:1, emoji:"🛕", name:"大神殿",        cost:{wood:140, stone:120, food:60},  mins:3,  bonus:0.20},
+  {age:2, emoji:"🏯", name:"グレートキープ", cost:{wood:280, stone:320},           mins:8,  bonus:0.25},
+  {age:3, emoji:"🗼", name:"大鐘楼",        cost:{wood:450, stone:450, food:250}, mins:15, bonus:0.30},
+  {age:4, emoji:"🌉", name:"大鉄橋",        cost:{wood:800, stone:900},           mins:25, bonus:0.40},
+  {age:5, emoji:"🗽", name:"自由の像",       cost:{wood:1400,stone:1400,food:900}, mins:40, bonus:0.50},
+];
+function wonderForAge(a){ return WONDERS.find(w=>w.age===a); }
+
+/* ===== 状態 ===== */
+let S = null;
+function freshState(){
+  return {
+    age:0,
+    name:"",
+    res:{wood:15, food:15, stone:8},
+    lv:{house:1, lumber:1, farm:1, quarry:0},
+    wonder:{ build:null, done:[] }, // build={age,startedAt} 建設中 / done=[age,...] 完成済み
+    bestCombo:0,
+    lifetime:0,       // 累計生産量（採取+自動+留守ぶん）
+    milestones:[],    // 達成済みマイルストーンid
+    lastSeen:Date.now(),
+  };
+}
+function load(){
+  try{ const r=localStorage.getItem("bokunoteikoku"); if(r){ S=JSON.parse(r);
+    // 後方互換
+    S.res=S.res||{}; S.lv=S.lv||{};
+    S.wonder=S.wonder||{build:null,done:[]}; S.wonder.done=S.wonder.done||[];
+    S.name=S.name||"";
+    S.bestCombo=S.bestCombo||0;
+    S.lifetime=S.lifetime||0; S.milestones=S.milestones||[];
+    return; } }catch(e){}
+  S=freshState();
+}
+function save(){ S.lastSeen=Date.now(); localStorage.setItem("bokunoteikoku", JSON.stringify(S)); cloudSave(false); }
+
+/* ===== 計算 ===== */
+function costOf(id){
+  const lv=S.lv[id]||0; const base=BASE_COST[id]; const c={};
+  for(const k in base){ if(base[k]>0) c[k]=Math.ceil(base[k]*Math.pow(COST_GROWTH,lv)); }
+  return c;
+}
+function wonderBonus(){ // 完成済みワンダーの合計ボーナス(0.35 = +35%)
+  let b=0; for(const a of (S.wonder?.done||[])){ const w=WONDERS.find(x=>x.age===a); if(w) b+=w.bonus; }
+  return b;
+}
+function rates(){ // 毎秒生産（時代倍率 × ワンダーボーナス × FEVER込み）
+  const m=AGES[S.age].mult * (1+wonderBonus()) * (feverActive()?FEVER_MULT:1); const r={wood:0,food:0,stone:0};
+  for(const b of BLD){ if(!b.prod) continue; const lv=S.lv[b.id]||0;
+    for(const k in b.prod){ r[k]+=b.prod[k]*lv*m; } }
+  // 食料は人口維持に少し消費（のんびり調整: 軽め）
+  return r;
+}
+function popCap(){ return 5 + (S.lv.house||0)*3; }
+function popUsed(){ return (S.lv.lumber||0)+(S.lv.farm||0)+(S.lv.quarry||0); }
+function canAfford(c){ for(const k in c){ if((S.res[k]||0) < c[k]) return false; } return true; }
+function devTotal(){ let t=0; for(const id in S.lv) t+=S.lv[id]; return t; }
+
+/* ===== オフライン進行 ===== */
+function applyElapsed(){
+  const now=Date.now();
+  const secs=Math.max(0,(now-(S.lastSeen||now))/1000);
+  const capped=Math.min(secs, 60*60*8); // 最大8時間ぶん
+  if(capped>3){
+    const r=rates(); const got={};
+    for(const k in r){ const g=r[k]*capped; if(g>0){ S.res[k]=(S.res[k]||0)+g; got[k]=g; S.lifetime+=g; } }
+    showOffline(capped, got);
+  }
+  S.lastSeen=now;
+  // 留守中にワンダーが完成していれば確定（演出は起動後に出す）
+  pendingWonder = checkWonderComplete() || pendingWonder;
+}
+let pendingWonder = null;
+function showOffline(secs, got){
+  const parts=[]; for(const res of RES){ const g=got[res.id]; if(g&&g>=1) parts.push(`${res.ic}+${Math.floor(g)}`); }
+  if(!parts.length) return;
+  const mins=Math.floor(secs/60);
+  const t=mins>=60? `${Math.floor(mins/60)}時間${mins%60}分`: `${mins}分`;
+  toast(`おかえり！留守の${t}で ${parts.join(" ")}`);
+}
+
+/* ===== 描画 ===== */
+const $=s=>document.querySelector(s);
+function fmt(n){ n=Math.floor(n);
+  if(n>=1e6) return (n/1e6).toFixed(1)+"M";
+  if(n>=1e4) return (n/1e3).toFixed(1)+"k";
+  return n.toString();
+}
+function render(){
+  const age=AGES[S.age];
+  document.body.style.background=age.bg;
+  $("#ageBadge").textContent="第"+(S.age+1)+"時代";
+  $("#ageName").textContent=age.name;
+  renderName();
+  renderBestCombo(false);
+
+  // resources
+  const r=rates();
+  $("#resources").innerHTML=RES.map(res=>{
+    const rate=r[res.id]||0;
+    return `<div class="res"><div class="ic">${res.ic}</div>
+      <div class="val">${fmt(S.res[res.id]||0)}</div>
+      <div class="rate ${rate?'':'zero'}">${rate?('+'+rate.toFixed(1)+'/秒'):'—'}</div></div>`;
+  }).join("");
+
+  // population
+  const used=popUsed(), cap=popCap();
+  $("#popLine").textContent=`👷 はたらき手 ${used} / ${cap}`;
+
+  // village scene
+  renderVillage();
+
+  // buildings
+  $("#buildings").innerHTML=BLD.map(b=>{
+    const lv=S.lv[b.id]||0; const c=costOf(b.id);
+    const costStr=Object.keys(c).map(k=>{const res=RES.find(x=>x.id===k);return res.ic+fmt(c[k]);}).join(" ");
+    const needPop=b.pop<0; // production建物は人口が要る
+    const popBlocked=needPop && used>=cap;
+    const afford=canAfford(c);
+    const ok=afford && !popBlocked;
+    let label = lv===0? "建てる" : "Lv"+(lv+1)+"へ";
+    let sub = popBlocked? "はたらき手が足りない" : costStr;
+    return `<div class="bld">
+      <div class="emoji">${b.emoji}</div>
+      <div class="info">
+        <div class="name">${b.name} <span class="lv">Lv.${lv}</span></div>
+        <div class="desc">${b.desc}</div>
+      </div>
+      <button data-b="${b.id}" class="${ok?'':'locked'}">${label}<span class="cost">${sub}</span></button>
+    </div>`;
+  }).join("");
+  document.querySelectorAll("#buildings button").forEach(btn=>{
+    btn.onclick=()=>buildIt(btn.dataset.b);
+  });
+
+  // wonder
+  renderWonder();
+
+  // advance
+  const adv=$("#advance"); const next=AGES[S.age+1];
+  if(!next){
+    adv.className="locked"; adv.innerHTML="🌟 最高時代に到達！<span class='req'>あなたの帝国は完成形です</span>";
+  }else{
+    const dev=devTotal(); const ready=dev>=next.need;
+    adv.className=ready?"":"locked";
+    adv.innerHTML=`${next.emoji} 「${next.name}」へ進化`+
+      `<span class="req">${ready?'タップで時代を進める！':`発展度 ${dev} / ${next.need}（建物を育てよう）`}</span>`;
+    adv.onclick=ready?advance:null;
+  }
+
+  // hint
+  $("#hint").textContent=hintText();
+}
+function wonderProgress(){ // 建設中ワンダーの進捗(0..1) or null
+  const b=S.wonder?.build; if(!b) return null;
+  const w=WONDERS.find(x=>x.age===b.age); if(!w) return null;
+  const total=w.mins*60*1000;
+  return Math.min(1,(Date.now()-b.startedAt)/total);
+}
+function renderWonder(){
+  const el=$("#wonder"); const w=wonderForAge(S.age);
+  if(!w){ el.innerHTML=`<div class="wonder-card"><div class="wonder-top"><div class="emoji">🏆</div><div class="info"><div class="name">すべての偉業を制覇</div><div class="eff">この帝国に残す偉業はもうない</div></div></div></div>`; return; }
+  const eff=`完成で 全生産 +${Math.round(w.bonus*100)}%（永久）`;
+  const costStr=Object.keys(w.cost).map(k=>{const res=RES.find(x=>x.id===k);return res.ic+fmt(w.cost[k]);}).join(" ");
+  const done=S.wonder.done.includes(w.age);
+  const building=S.wonder.build && S.wonder.build.age===w.age;
+
+  if(done){
+    el.innerHTML=`<div class="wonder-card built"><div class="wonder-top">
+      <div class="emoji">${w.emoji}</div>
+      <div class="info"><div class="name">${w.name}</div><div class="eff">✓ 全生産 +${Math.round(w.bonus*100)}% 発動中</div></div>
+      <div class="wonder-done-badge">完成済み</div>
+    </div></div>`;
+    return;
+  }
+  if(building){
+    const p=wonderProgress(); const remain=Math.max(0,Math.ceil((w.mins*60)*(1-p)));
+    const rem = remain>=60? `あと ${Math.floor(remain/60)}分${remain%60}秒` : `あと ${remain}秒`;
+    el.innerHTML=`<div class="wonder-card"><div class="wonder-top">
+      <div class="emoji">${w.emoji}</div>
+      <div class="info"><div class="name">${w.name} を建設中…</div><div class="eff">${eff}</div></div>
+    </div>
+    <div class="wbar"><div style="width:${(p*100).toFixed(1)}%"></div></div>
+    <div class="wbar-label">${rem}（閉じても進むよ）</div></div>`;
+    return;
+  }
+  // 未着工
+  const afford=canAfford(w.cost);
+  el.innerHTML=`<div class="wonder-card"><div class="wonder-top">
+    <div class="emoji">${w.emoji}</div>
+    <div class="info"><div class="name">${w.name}</div><div class="eff">${eff}・${w.mins}分で完成</div></div>
+    <button id="wbtn" class="${afford?'':'locked'}">着工<span class="cost">${costStr}</span></button>
+  </div></div>`;
+  const btn=$("#wbtn"); if(btn) btn.onclick=()=>buildWonder(w);
+}
+function renderVillage(){
+  // 建物レベルぶんだけ絵文字を並べる（育つほど賑やかに）
+  let icons=[];
+  const order=[["house","🏠"],["lumber","🌲"],["farm","🌾"],["quarry","⛏️"]];
+  for(const [id,ic] of order){ const lv=S.lv[id]||0; for(let i=0;i<lv;i++) icons.push(ic); }
+  // 時代の象徴を中央に
+  icons.splice(Math.floor(icons.length/2),0, AGES[S.age].emoji);
+  // 完成したワンダーを誇らしく並べる
+  for(const a of (S.wonder?.done||[])){ const w=WONDERS.find(x=>x.age===a); if(w) icons.push(w.emoji); }
+  $("#village").innerHTML=icons.map(i=>`<span>${i}</span>`).join("");
+}
+function hintText(){
+  if(devTotal()<=2) return "ヒント: まずは🌲きこり小屋と🌾畑で資源を増やそう";
+  const used=popUsed(), cap=popCap();
+  if(used>=cap) return "ヒント: 🏠家を建てると、はたらき手の上限が増える";
+  const next=AGES[S.age+1];
+  if(next && devTotal()>=next.need) return "✨ 次の時代に進めるよ！";
+  return "コツ: 閉じても資源は貯まる。また覗きにおいで";
+}
+
+/* ===== アクション ===== */
+function buildIt(id){
+  const c=costOf(id); const b=BLD.find(x=>x.id===id);
+  const used=popUsed(), cap=popCap();
+  if(b.pop<0 && used>=cap){ toast("はたらき手が足りない。🏠家を建てよう"); return; }
+  if(!canAfford(c)){ flash(id); return; }
+  for(const k in c) S.res[k]-=c[k];
+  S.lv[id]=(S.lv[id]||0)+1;
+  checkMilestones();
+  save(); render();
+}
+function flash(id){
+  toast("資源が足りないよ");
+}
+function advance(){
+  const next=AGES[S.age+1]; if(!next) return;
+  if(devTotal()<next.need) return;
+  S.age++; save();
+  celebrate(AGES[S.age]);
+  render();
+}
+function buildWonder(w){
+  if(S.wonder.build){ toast("いま別の偉業を建設中だよ"); return; }
+  if(S.wonder.done.includes(w.age)){ return; }
+  if(!canAfford(w.cost)){ toast("資源が足りないよ"); return; }
+  for(const k in w.cost) S.res[k]-=w.cost[k];
+  S.wonder.build={age:w.age, startedAt:Date.now()};
+  save(); render();
+  toast(`${w.emoji} ${w.name} の建設をはじめた！`);
+}
+// 建設中ワンダーが完成していれば確定する（戻り値:完成したワンダー or null）
+function checkWonderComplete(){
+  const b=S.wonder?.build; if(!b) return null;
+  const w=WONDERS.find(x=>x.age===b.age); if(!w){ S.wonder.build=null; return null; }
+  if(Date.now()-b.startedAt >= w.mins*60*1000){
+    S.wonder.done.push(w.age); S.wonder.build=null; save();
+    return w;
+  }
+  return null;
+}
+
+/* ===== マイルストーン（節目のプチ祝い） ===== */
+const MILESTONES = [
+  {id:"dev5",   emoji:"🏅", label:"発展度 5 到達！",      test:()=>devTotal()>=5},
+  {id:"dev10",  emoji:"🏅", label:"発展度 10 到達！",     test:()=>devTotal()>=10},
+  {id:"dev20",  emoji:"🎖️", label:"発展度 20 到達！",     test:()=>devTotal()>=20},
+  {id:"dev35",  emoji:"🎖️", label:"発展度 35 到達！",     test:()=>devTotal()>=35},
+  {id:"dev50",  emoji:"🏆", label:"発展度 50 到達！",     test:()=>devTotal()>=50},
+  {id:"dev75",  emoji:"🏆", label:"発展度 75 到達！",     test:()=>devTotal()>=75},
+  {id:"dev100", emoji:"👑", label:"発展度 100 到達！",    test:()=>devTotal()>=100},
+  {id:"life1k", emoji:"⛏️", label:"累計生産 1,000 突破！", test:()=>S.lifetime>=1000},
+  {id:"life10k",emoji:"⛏️", label:"累計生産 1万 突破！",   test:()=>S.lifetime>=10000},
+  {id:"life100k",emoji:"💎",label:"累計生産 10万 突破！",  test:()=>S.lifetime>=100000},
+  {id:"life1m", emoji:"💎", label:"累計生産 100万 突破！", test:()=>S.lifetime>=1000000},
+];
+function checkMilestones(){
+  let hit=null;
+  for(const m of MILESTONES){
+    if(S.milestones.includes(m.id)) continue;
+    if(m.test()){ S.milestones.push(m.id); hit=m; }
+  }
+  if(hit){ milestoneCelebrate(hit); save(); }
+}
+function seedMilestones(){ // 既存セーブ：到達済みは祝わず印だけ付ける（読込時スパム防止）
+  for(const m of MILESTONES){ if(!S.milestones.includes(m.id) && m.test()) S.milestones.push(m.id); }
+}
+function milestoneCelebrate(m){
+  toast(m.emoji+" "+m.label);
+  sndMilestone();
+  const scene=$("#scene"); if(!scene) return;
+  for(let i=0;i<7;i++){
+    const s=document.createElement("div"); s.className="spark"; s.textContent="🎉";
+    s.style.left=(18+Math.random()*64)+"%"; s.style.top=(28+Math.random()*42)+"%";
+    s.style.animationDelay=(Math.random()*.4)+"s";
+    scene.appendChild(s); setTimeout(()=>s.remove(),1600);
+  }
+}
+
+/* ===== 演出 ===== */
+let toastTimer=null;
+function toast(msg){
+  const t=$("#toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),3600);
+}
+function celebrate(age){
+  $("#celEmoji").textContent=age.emoji;
+  $("#celName").textContent=age.name;
+  $("#celSub").textContent=(S.name?`${S.name}は `:"")+`生産力 ${age.mult}倍 の新時代へ！`;
+  sndFanfare(); vibe([0,60,40,60,40,90]);
+  const c=$("#celebrate"); c.classList.add("show");
+  // sparkles
+  for(let i=0;i<12;i++){
+    const s=document.createElement("div"); s.className="spark"; s.textContent="✨";
+    s.style.left=(10+Math.random()*80)+"%"; s.style.top=(40+Math.random()*30)+"%";
+    s.style.animationDelay=(Math.random()*.5)+"s";
+    c.appendChild(s); setTimeout(()=>s.remove(),1600);
+  }
+}
+function celebrateWonder(w){
+  $("#celEmoji").textContent=w.emoji;
+  $("#celName").textContent=w.name+" 完成！";
+  $("#celSub").textContent=`全生産が +${Math.round(w.bonus*100)}% に！帝国の誇りだ`;
+  document.querySelector("#celebrate .label").textContent="WONDER COMPLETE";
+  sndFanfare(); vibe([0,60,40,60,40,90]);
+  const c=$("#celebrate"); c.classList.add("show");
+  for(let i=0;i<12;i++){
+    const s=document.createElement("div"); s.className="spark"; s.textContent="✨";
+    s.style.left=(10+Math.random()*80)+"%"; s.style.top=(40+Math.random()*30)+"%";
+    s.style.animationDelay=(Math.random()*.5)+"s";
+    c.appendChild(s); setTimeout(()=>s.remove(),1600);
+  }
+}
+$("#celClose").onclick=()=>{
+  $("#celebrate").classList.remove("show");
+  document.querySelector("#celebrate .label").textContent="NEW AGE";
+};
+
+/* ===== 帝国の名前 ===== */
+function renderName(){
+  const el=$("#empireName"); if(!el) return;
+  if(S.name){ el.textContent="👑 "+S.name; el.className="empire-name"; }
+  else { el.textContent="＋ 帝国に名前をつける"; el.className="empire-name unset"; }
+}
+function openNameDialog(){
+  const inp=$("#nameInput"); inp.value=S.name||"";
+  $("#nameDialog").classList.add("show"); setTimeout(()=>inp.focus(),60);
+}
+function closeNameDialog(){ $("#nameDialog").classList.remove("show"); }
+function saveName(){
+  const v=$("#nameInput").value.trim().slice(0,16);
+  if(v){ const first=!S.name; S.name=v; save(); closeNameDialog(); render();
+    toast(first?`「${v}」の歴史が始まった！`:`帝国名を「${v}」に変更した`);
+  } else { closeNameDialog(); }
+}
+
+/* ===== サウンド（Web Audioで合成・ファイル不要）＆触覚 ===== */
+let actx=null, muted=false;
+function audio(){
+  if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } }
+  if(actx.state==="suspended") actx.resume();
+  return actx;
+}
+function beep(freq, dur, type, vol, when){
+  if(muted) return; const a=audio(); if(!a) return;
+  const t=a.currentTime+(when||0);
+  const o=a.createOscillator(), g=a.createGain();
+  o.type=type||"sine"; o.frequency.value=freq;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(vol||0.12, t+0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  o.connect(g); g.connect(a.destination);
+  o.start(t); o.stop(t+dur+0.02);
+}
+function vibe(p){ if(!muted && navigator.vibrate){ try{ navigator.vibrate(p); }catch(e){} } }
+function sndTap(combo){ beep(300 + Math.min(combo,30)*11, 0.07, "triangle", 0.09); } // コンボで音程上昇
+function sndCrit(){ beep(880,0.10,"square",0.11); beep(1320,0.16,"square",0.09,0.05); }
+function sndFever(){ [523,659,784,1047].forEach((f,i)=>beep(f,0.18,"sine",0.13,i*0.07)); }
+function sndFanfare(){ [392,523,659,784].forEach((f,i)=>beep(f,0.30,"triangle",0.13,i*0.10)); }
+function sndMilestone(){ [659,880,1109].forEach((f,i)=>beep(f,0.16,"triangle",0.11,i*0.06)); }
+function setMuted(m){
+  muted=m; localStorage.setItem("toe_muted", m?"1":"");
+  const b=$("#soundToggle"); if(b) b.textContent=m?"🔇":"🔊";
+}
+
+/* ===== タップ採取（コンボ × クリティカルで熱狂） ===== */
+const GATHER = {wood:2, food:2, stone:1}; // 1タップの基本採取量
+const COMBO_WINDOW = 1100;   // この間隔で叩き続けるとコンボ継続(ms)
+const CRIT_CHANCE  = 0.14;   // クリティカル確率
+const CRIT_MULT    = 7;      // クリティカル倍率
+const FEVER_TRIGGER= 20;     // このコンボでFEVER突入
+const FEVER_MS     = 6000;   // FEVER継続(ms)
+const FEVER_MULT   = 3;      // FEVER中：全採取・生産が3倍
+let gatherCount = 0;
+let comboCount = 0, lastTap = 0, comboTimer = null, streakRecord = false;
+let feverUntil = 0, feverEndTimer = null, feverStartRes = null;
+function feverActive(){ return Date.now() < feverUntil; }
+function gatherTap(e){
+  const now = Date.now();
+  comboCount = (now - lastTap < COMBO_WINDOW) ? comboCount+1 : 1;
+  lastTap = now;
+  if(comboCount>=FEVER_TRIGGER && !feverActive()) startFever();
+  if(comboCount===1) streakRecord=false; // 新しい連打の始まり
+  if(comboCount>S.bestCombo && comboCount>=3){ // 自己ベスト更新
+    S.bestCombo=comboCount; renderBestCombo(true);
+    if(!streakRecord){ streakRecord=true; sndRecord(); }
+  }
+  // コンボで採取量が伸びる（連打するほど数字が爆発＝熱狂）
+  const comboMult = 1 + Math.min(comboCount-1, 40) * 0.2;
+  const crit = Math.random() < CRIT_CHANCE;
+  const total = AGES[S.age].mult * (1+wonderBonus()) * comboMult * (crit ? CRIT_MULT : 1) * (feverActive()?FEVER_MULT:1);
+  const got = {};
+  for(const k in GATHER){ const g=GATHER[k]*total; S.res[k]=(S.res[k]||0)+g; got[k]=g; S.lifetime+=g; }
+
+  const scene=$("#scene"); const rect=scene.getBoundingClientRect();
+  const x=((e.clientX!=null?e.clientX:rect.left+rect.width/2)-rect.left);
+  const y=((e.clientY!=null?e.clientY:rect.top+rect.height*0.5)-rect.top);
+  const fl=document.createElement("div"); fl.className="gather-float"+(crit?" crit":"");
+  const amt=Math.max(1,Math.round(got.wood+got.food+got.stone));
+  fl.textContent=(crit?"CRITICAL! +":"+")+amt;
+  fl.style.left=x+"px"; fl.style.top=y+"px";
+  fl.style.fontSize=(crit?26:16 + Math.min(comboCount,20))+"px";
+  scene.appendChild(fl); setTimeout(()=>fl.remove(),900);
+
+  showCombo(comboCount);
+  if(crit){ critFx(scene); sndCrit(); vibe([0,18,28,22]); }
+  else { sndTap(comboCount); vibe(7); }
+  clearTimeout(comboTimer); comboTimer=setTimeout(()=>{
+    if(streakRecord){ toast("🏆 最高コンボ更新！"+S.bestCombo+"連打"); save(); streakRecord=false; }
+    comboCount=0; hideCombo();
+  }, COMBO_WINDOW);
+
+  if(++gatherCount>=4){ const h=$("#tapHint"); if(h) h.style.display="none"; }
+  updateLight();
+}
+function showCombo(n){
+  const el=$("#comboBadge"); if(!el) return;
+  if(n<3){ hideCombo(); return; }
+  el.querySelector(".n").textContent=n;
+  el.querySelector(".lbl").textContent = streakRecord ? "🏆 NEW RECORD" : "COMBO";
+  el.classList.toggle("record", streakRecord);
+  el.classList.remove("show"); void el.offsetWidth; el.classList.add("show"); // リスタートでポップ
+  el.style.transform="scale("+(1+Math.min(n,40)*0.02)+")";
+  // 高コンボほど色を熱く（記録更新中は record クラスの金色が優先）
+  if(!streakRecord) el.style.color = n>=20 ? "#d11f1f" : n>=10 ? "#e8421c" : "#e8642c";
+}
+function hideCombo(){ const el=$("#comboBadge"); if(el) el.classList.remove("show"); }
+function renderBestCombo(flash){
+  const el=$("#bestCombo"); if(!el) return;
+  el.textContent = S.bestCombo>0 ? ("🏆 最高 "+S.bestCombo) : "";
+  if(flash){ el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
+}
+function sndRecord(){ beep(784,0.10,"triangle",0.12); beep(1175,0.18,"triangle",0.11,0.06); }
+function critFx(scene){
+  scene.classList.remove("shake"); void scene.offsetWidth; scene.classList.add("shake");
+  const f=document.createElement("div"); f.className="crit-flash";
+  scene.appendChild(f); setTimeout(()=>f.remove(),460);
+}
+function startFever(){
+  feverUntil = Date.now() + FEVER_MS;
+  feverStartRes = {wood:S.res.wood||0, food:S.res.food||0, stone:S.res.stone||0};
+  const scene=$("#scene"); scene.classList.add("fever");
+  if(!$("#feverBanner")){ const b=document.createElement("div"); b.className="fever-banner"; b.id="feverBanner"; b.textContent="🔥 FEVER!"; scene.appendChild(b); }
+  if(!$("#feverBar")){ const bar=document.createElement("div"); bar.className="fever-bar"; bar.id="feverBar"; bar.style.width="100%"; scene.appendChild(bar); }
+  toast("🔥 FEVER TIME！全採取・生産が "+FEVER_MULT+"倍！");
+  sndFever(); vibe([0,40,50,80]);
+  clearTimeout(feverEndTimer); feverEndTimer=setTimeout(endFever, FEVER_MS);
+}
+function endFever(){
+  feverUntil = 0;
+  const scene=$("#scene"); scene.classList.remove("fever");
+  const b=$("#feverBanner"); if(b) b.remove();
+  const bar=$("#feverBar"); if(bar) bar.remove();
+  // 締め：FEVER中に稼いだ量をまとめて派手に見せる
+  if(feverStartRes){
+    const parts=[];
+    for(const res of RES){ const g=(S.res[res.id]||0)-(feverStartRes[res.id]||0); if(g>=1) parts.push(res.ic+"+"+fmt(g)); }
+    feverStartRes=null;
+    if(parts.length){
+      const el=document.createElement("div"); el.className="fever-result";
+      el.innerHTML='<span class="big">🔥 FEVER 終了！</span><span class="got">'+parts.join("　")+'</span>';
+      scene.appendChild(el); setTimeout(()=>el.remove(),2600);
+    }
+  }
+}
+function updateFeverBar(){
+  if(!feverActive()) return;
+  const bar=$("#feverBar"); if(bar) bar.style.width=Math.max(0,(feverUntil-Date.now())/FEVER_MS*100).toFixed(1)+"%";
+}
+
+/* ===== ループ ===== */
+function tick(){
+  const r=rates();
+  for(const k in r){ S.res[k]=(S.res[k]||0)+r[k]; S.lifetime+=r[k]; }
+  checkMilestones();
+  // ワンダー完成チェック
+  const w=checkWonderComplete();
+  if(w){ celebrateWonder(w); render(); return; }
+  // 表示だけ更新（建物リストは毎秒作り直すと重い→値とゲートのみ）
+  updateLight();
+  updateWonderBar();
+  updateFeverBar();
+}
+function updateWonderBar(){
+  const p=wonderProgress(); if(p===null) return;
+  const bar=document.querySelector("#wonder .wbar > div");
+  if(bar) bar.style.width=(p*100).toFixed(1)+"%";
+}
+let lastFullRender=0;
+function updateLight(){
+  const r=rates();
+  RES.forEach((res,i)=>{
+    const cell=document.querySelectorAll("#resources .res")[i];
+    if(cell) cell.querySelector(".val").textContent=fmt(S.res[res.id]||0);
+  });
+  // 買えるようになったらボタン状態を更新（毎秒フル描画は避けつつ整合）
+  const now=Date.now();
+  if(now-lastFullRender>1500){ lastFullRender=now; render(); }
+}
+
+/* ===== クラウド保存（Firebase）— config未設定ならローカルにフォールバック ===== */
+// ↓↓↓ あなたの Firebase config をここに貼る。
+// apiKey等はクライアントに出てOK（公開前提・守るのは Firestore セキュリティルール）。
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBB4hOSTKa_-0DsvtRDvh_baJZyETiHsuU",
+  authDomain: "time-of-empire.firebaseapp.com",
+  projectId: "time-of-empire",   // ← これが空の間は完全ローカル動作（クラウド無効）
+  appId: "1:415400466833:web:b9b3be3077244b3a73a230"
+};
+const FB_VER = "10.12.5";
+let fbDB=null, fbUID=null, cloudReady=false, lastCloudSave=0;
+
+function setSaveStatus(t){ const el=$("#saveStatus"); if(el) el.textContent=t; }
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=()=>rej(new Error("script load失敗: "+src)); document.head.appendChild(s); }); }
+
+async function initCloud(){
+  if(!FIREBASE_CONFIG.projectId){ setSaveStatus("📁 ローカル保存"); return; }
+  setSaveStatus("☁️ 接続中…");
+  try{
+    const base="https://www.gstatic.com/firebasejs/"+FB_VER+"/";
+    await loadScript(base+"firebase-app-compat.js");
+    await loadScript(base+"firebase-auth-compat.js");
+    await loadScript(base+"firebase-firestore-compat.js");
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fbDB=firebase.firestore();
+    const cred=await firebase.auth().signInAnonymously();
+    fbUID=cred.user.uid;
+    cloudReady=true;
+    await cloudLoadMerge();
+    setSaveStatus("☁️ クラウド同期");
+  }catch(e){
+    cloudReady=false;
+    console.warn("[cloud] 無効化（ローカル継続）:", (e&&e.message)||e);
+    setSaveStatus("📁 ローカル保存（クラウド接続失敗）");
+  }
+}
+async function cloudLoadMerge(){
+  const ref=fbDB.collection("empires").doc(fbUID);
+  const snap=await ref.get();
+  if(snap.exists && snap.data().state){
+    const cloud=snap.data().state;
+    // 競合解決：「進んでる方を採用」= 累計生産量で比較
+    if((cloud.lifetime||0) > (S.lifetime||0)){
+      S=cloud;
+      // 後方互換の穴埋め
+      S.res=S.res||{}; S.lv=S.lv||{}; S.wonder=S.wonder||{build:null,done:[]};
+      S.wonder.done=S.wonder.done||[]; S.milestones=S.milestones||[];
+      S.name=S.name||""; S.bestCombo=S.bestCombo||0; S.lifetime=S.lifetime||0;
+      applyElapsed(); seedMilestones(); render();
+      toast("☁️ クラウドの続きを復元した");
+    } else {
+      cloudSave(true); // ローカルが同等以上 → クラウドへ押し上げ
+    }
+  } else {
+    cloudSave(true); // 初回 → 新規ドキュメント作成
+  }
+}
+function cloudSave(force){
+  if(!cloudReady) return;
+  const now=Date.now();
+  if(!force && now-lastCloudSave < 15000) return; // 書き込みは最短15秒間隔（無料枠にやさしく）
+  lastCloudSave=now;
+  fbDB.collection("empires").doc(fbUID).set({
+    state: S,
+    name: S.name||"",
+    age: S.age||0,
+    bestCombo: S.bestCombo||0,
+    lifetime: Math.floor(S.lifetime||0),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, {merge:true}).catch(e=>console.warn("[cloud] save失敗:", (e&&e.message)||e));
+}
+
+/* ===== 起動 ===== */
+function start(){
+  load();
+  applyElapsed();
+  seedMilestones();
+  render();
+  initCloud();
+  setInterval(()=>cloudSave(false), 20000);
+  if(pendingWonder){ const w=pendingWonder; pendingWonder=null; setTimeout(()=>celebrateWonder(w),700); }
+  $("#scene").addEventListener("pointerdown", gatherTap);
+  setInterval(tick,1000);
+  setInterval(save,5000);
+  window.addEventListener("beforeunload",save);
+  document.addEventListener("visibilitychange",()=>{
+    if(document.visibilityState==="visible"){
+      applyElapsed(); render();
+      if(pendingWonder){ const w=pendingWonder; pendingWonder=null; celebrateWonder(w); }
+    } else { save(); cloudSave(true); }
+  });
+}
+setMuted(localStorage.getItem("toe_muted")==="1");
+$("#soundToggle").onclick=()=>{ setMuted(!muted); if(!muted) beep(660,0.09,"sine",0.1); };
+$("#empireName").onclick=openNameDialog;
+$("#nameOk").onclick=saveName;
+$("#nameCancel").onclick=closeNameDialog;
+$("#nameInput").addEventListener("keydown",e=>{ if(e.key==="Enter") saveName(); });
+$("#reset").onclick=()=>{
+  if(confirm("帝国を最初からやり直す？この端末の進行は消えます")){ S=freshState(); save(); render(); }
+};
+start();
+</script>
+</body>
+</html>
