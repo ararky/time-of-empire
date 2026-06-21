@@ -241,11 +241,31 @@
     background:#fff; font-size:16px; cursor:pointer; line-height:1; padding:0;
     box-shadow:0 2px 0 rgba(0,0,0,.05);}
   .snd-toggle:active{transform:translateY(1px);}
+  .help-btn{position:absolute; top:14px; left:14px; z-index:20;
+    width:38px; height:38px; border-radius:50%; border:2px solid var(--line);
+    background:#fff; font-size:16px; line-height:34px; text-align:center; text-decoration:none;
+    box-shadow:0 2px 0 rgba(0,0,0,.05);}
+  .help-btn:active{transform:translateY(1px);}
+
+  /* 明朝（帯の文学トーン用） */
+  .mincho{font-family:"Hiragino Mincho ProN","Yu Mincho",YuMincho,serif;}
+
+  /* 小説の帯（時代連動・タップで物語へ） */
+  .obi{margin:24px -14px 12px; padding:15px 22px 12px; cursor:pointer; text-align:center; position:relative;
+    background:linear-gradient(180deg,#efe1c2,#e6d4ac);
+    border-top:2px solid var(--gold); border-bottom:2px solid var(--gold);}
+  .obi:active{filter:brightness(.98);}
+  .obi::before{content:""; position:absolute; left:0; right:0; top:4px; height:1px; background:rgba(176,138,40,.45);}
+  .obi::after{content:""; position:absolute; left:0; right:0; bottom:4px; height:1px; background:rgba(176,138,40,.45);}
+  .obi-label{font-size:10px; letter-spacing:.32em; color:var(--accent); margin-bottom:7px;}
+  .obi-text{font-size:14.5px; line-height:1.78; color:#3f3120; font-weight:500; transition:opacity .35s ease; min-height:1.78em;}
+  .obi-more{font-size:10px; letter-spacing:.14em; color:#a8842a; margin-top:9px; opacity:.85;}
 </style>
 </head>
 <body>
 <div id="app">
   <button id="soundToggle" class="snd-toggle" title="音のオン/オフ">🔊</button>
+  <a id="helpBtn" class="help-btn" href="scenario.html" target="_blank" rel="noopener" title="この帝国の物語を読む">📖</a>
   <header>
     <div class="age-badge" id="ageBadge">第1時代</div>
     <h1>Time of Empire</h1>
@@ -278,6 +298,12 @@
 
   <div class="pop" id="hint" style="margin-top:18px; color:#a99a78;"></div>
 
+  <div class="obi" id="obi" title="この帝国の物語を読む">
+    <div class="obi-label" id="obiLabel">第1時代</div>
+    <div class="obi-text mincho" id="obiText">生き延びることそのものが、祝祭だった。</div>
+    <div class="obi-more">― タップで、この帝国の物語を ―</div>
+  </div>
+
   <footer>
     Time of Empire — <span id="saveStatus">📁 ローカル保存</span>
     <br><button class="reset" id="reset">最初からやり直す</button>
@@ -309,12 +335,12 @@
 <script>
 /* ===== ゲームデータ ===== */
 const AGES = [
-  {name:"原始時代",   emoji:"🛖", mult:1,   bg:"#f4ead5", need:0},
-  {name:"古代",       emoji:"🏛️", mult:2.2, bg:"#ede3c8", need:8},
-  {name:"中世",       emoji:"🏰", mult:5,   bg:"#e4ddd0", need:20},
-  {name:"ルネサンス", emoji:"⛪", mult:11,  bg:"#e6e0e8", need:40},
-  {name:"産業時代",   emoji:"🏭", mult:25,  bg:"#dcdde0", need:70},
-  {name:"現代",       emoji:"🏙️", mult:60,  bg:"#d6e2ea", need:110},
+  {name:"原始時代",   emoji:"🛖", mult:1,   bg:"#f4ead5", need:0,   tag:"生き延びることそのものが、祝祭だった。"},
+  {name:"古代",       emoji:"🏛️", mult:2.2, bg:"#ede3c8", need:8,   tag:"文明とは、つきつめれば「余りの分けあい方」の発明だった。"},
+  {name:"中世",       emoji:"🏰", mult:5,   bg:"#e4ddd0", need:20,  tag:"中央の太陽が消えたあと、無数の小さな灯が燃えはじめた。"},
+  {name:"ルネサンス", emoji:"⛪", mult:11,  bg:"#e6e0e8", need:40,  tag:"自分の理性で、世界を測りなおす時代。"},
+  {name:"産業時代",   emoji:"🏭", mult:25,  bg:"#dcdde0", need:70,  tag:"人類は、自分で起こせる、無尽蔵の力を手にした。"},
+  {name:"現代",       emoji:"🏙️", mult:60,  bg:"#d6e2ea", need:110, tag:"点から始まったものが、ついに星へ届く。"},
 ];
 
 const RES = [
@@ -438,6 +464,7 @@ function render(){
   $("#ageName").textContent=age.name;
   renderName();
   renderBestCombo(false);
+  renderObi();
 
   // resources
   const r=rates();
@@ -789,6 +816,17 @@ function renderBestCombo(flash){
   el.textContent = S.bestCombo>0 ? ("🏆 最高 "+S.bestCombo) : "";
   if(flash){ el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
 }
+let obiCurrent="", obiInit=false;
+function renderObi(){
+  const t=AGES[S.age].tag||""; const lbl=$("#obiLabel"), txt=$("#obiText");
+  if(lbl) lbl.textContent="第"+(S.age+1)+"時代";
+  if(!txt) return;
+  if(!obiInit){ txt.textContent=t; obiCurrent=t; obiInit=true; return; }
+  if(t!==obiCurrent){ // 時代が進んだ→帯の一行が静かにめくれる
+    obiCurrent=t; txt.style.opacity="0";
+    setTimeout(()=>{ txt.textContent=t; txt.style.opacity="1"; }, 320);
+  }
+}
 function sndRecord(){ beep(784,0.10,"triangle",0.12); beep(1175,0.18,"triangle",0.11,0.06); }
 function critFx(scene){
   scene.classList.remove("shake"); void scene.offsetWidth; scene.classList.add("shake");
@@ -951,6 +989,7 @@ function start(){
 }
 setMuted(localStorage.getItem("toe_muted")==="1");
 $("#soundToggle").onclick=()=>{ setMuted(!muted); if(!muted) beep(660,0.09,"sine",0.1); };
+$("#obi").onclick=()=>window.open("scenario.html","_blank","noopener");
 $("#empireName").onclick=openNameDialog;
 $("#nameOk").onclick=saveName;
 $("#nameCancel").onclick=closeNameDialog;
