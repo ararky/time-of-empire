@@ -532,7 +532,7 @@ function fmt(n){ n=Math.floor(n);
 function render(){
   const age=AGES[S.age];
   document.body.style.background=age.bg;
-  $("#ageBadge").textContent="第"+(S.age+1)+"時代"+((S.prestige||0)>0?" · "+S.prestige+"周目":"");
+  $("#ageBadge").textContent="第"+(S.age+1)+"時代"+((S.prestige||0)>0?" · "+(S.prestige+1)+"周目":"");
   $("#ageName").textContent=age.name;
   renderName();
   renderBestCombo(false);
