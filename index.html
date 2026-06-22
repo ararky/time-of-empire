@@ -357,7 +357,9 @@
 
   <footer>
     Time of Empire — <span id="saveStatus">📁 ローカル保存</span>
-    <br><button class="reset" id="reset">最初からやり直す</button>
+    <br><button class="reset" id="memento" style="display:none;">🏛️ クリア記念を見る</button>
+    <span id="mementoSep" style="display:none;"> ・ </span>
+    <button class="reset" id="reset">最初からやり直す</button>
   </footer>
 </div>
 
@@ -458,6 +460,7 @@ function freshState(){
     milestones:[],    // 達成済みマイルストーンid
     prestige:0,       // 周回数（クリアして次の世界へ進んだ回数）
     cleared:false,    // この周をクリア済みか
+    clearRecord:null, // クリアの記念スナップショット（いつでも再表示用）
     lastSeen:Date.now(),
   };
 }
@@ -469,7 +472,7 @@ function load(){
     S.name=S.name||"";
     S.bestCombo=S.bestCombo||0;
     S.lifetime=S.lifetime||0; S.milestones=S.milestones||[];
-    S.prestige=S.prestige||0; S.cleared=S.cleared||false;
+    S.prestige=S.prestige||0; S.cleared=S.cleared||false; S.clearRecord=S.clearRecord||null;
     return; } }catch(e){}
   S=freshState();
 }
@@ -537,6 +540,10 @@ function render(){
   renderName();
   renderBestCombo(false);
   renderObi();
+  const showMem = !!S.clearRecord;
+  const mem=$("#memento"), sep=$("#mementoSep");
+  if(mem) mem.style.display = showMem ? "" : "none";
+  if(sep) sep.style.display = showMem ? "" : "none";
 
   // resources
   const r=rates();
@@ -585,7 +592,7 @@ function render(){
   if(!next){
     const finalDone=S.wonder.done.includes(AGES.length-1);
     if(finalDone){
-      adv.className=""; adv.onclick=showFinale;
+      adv.className=""; adv.onclick=()=>showFinale(false);
       adv.innerHTML="🌌 次の世界へ（"+((S.prestige||0)+1)+"周目）<span class='req'>文明を継ぎ、さらに大きく</span>";
     } else {
       adv.className="locked"; adv.onclick=null;
@@ -746,21 +753,36 @@ function milestoneCelebrate(m){
 function checkClear(){
   if(S.cleared) return;
   if(S.age>=AGES.length-1 && S.wonder.done.includes(AGES.length-1)){
-    S.cleared=true; save(); cloudSave(true);
-    setTimeout(showFinale, 700);
+    S.cleared=true;
+    S.clearRecord={ run:(S.prestige||0)+1, name:S.name||"名もなき帝国",
+      bestCombo:S.bestCombo||0, lifetime:Math.floor(S.lifetime||0),
+      wonders:S.wonder.done.length, at:Date.now() };
+    save(); cloudSave(true);
+    setTimeout(()=>showFinale(false), 700);
+  }
+}
+// 既存セーブ（周回済みだが記録なし）に、ざっくりした記念を補完
+function seedClearRecord(){
+  if((S.prestige||0)>0 && !S.clearRecord){
+    S.clearRecord={ run:S.prestige, name:S.name||"名もなき帝国",
+      bestCombo:S.bestCombo||0, lifetime:Math.floor(S.lifetime||0), wonders:"—", at:0 };
   }
 }
 function finStat(k,v){ return '<div class="fin-stat"><div class="fk">'+k+'</div><div class="fv">'+v+'</div></div>'; }
-function showFinale(){
+// review=true なら再表示（記念モード：周回ボタンは隠す）
+function showFinale(review){
   $("#celebrate").classList.remove("show");
-  const run=(S.prestige||0)+1;
-  $("#finEmpire").textContent="― "+(S.name||"名もなき帝国")+" ―";
+  const rec = S.clearRecord || { run:(S.prestige||0)+1, name:S.name||"名もなき帝国",
+    bestCombo:S.bestCombo||0, lifetime:Math.floor(S.lifetime||0), wonders:S.wonder.done.length };
+  $("#finEmpire").textContent="― "+rec.name+" ―";
   $("#finStats").innerHTML =
-    finStat("到達", run+"周目クリア") +
-    finStat("最高コンボ", (S.bestCombo||0)+" 連打") +
-    finStat("累計生産", fmt(S.lifetime||0)) +
-    finStat("偉業", S.wonder.done.length+" / "+WONDERS.length);
-  $("#finNext").innerHTML="🌌 次の世界へ　<small>全生産 +"+Math.round(run*PRESTIGE_BONUS*100)+"% を継承</small>";
+    finStat("到達", rec.run+"周目クリア") +
+    finStat("最高コンボ", rec.bestCombo+" 連打") +
+    finStat("累計生産", fmt(rec.lifetime)) +
+    finStat("偉業", rec.wonders+" / "+WONDERS.length);
+  const btn=$("#finNext");
+  if(review){ btn.style.display="none"; }
+  else { btn.style.display=""; btn.innerHTML="🌌 次の世界へ　<small>全生産 +"+Math.round(((S.prestige||0)+1)*PRESTIGE_BONUS*100)+"% を継承</small>"; }
   $("#finale").classList.add("show");
   bigCelebrate(); sndFanfare(); vibe([0,80,40,80,40,120]);
 }
@@ -1067,8 +1089,8 @@ async function cloudLoadMerge(){
       S.res=S.res||{}; S.lv=S.lv||{}; S.wonder=S.wonder||{build:null,done:[]};
       S.wonder.done=S.wonder.done||[]; S.milestones=S.milestones||[];
       S.name=S.name||""; S.bestCombo=S.bestCombo||0; S.lifetime=S.lifetime||0;
-      S.prestige=S.prestige||0; S.cleared=S.cleared||false;
-      applyElapsed(); seedMilestones(); render(); checkClear();
+      S.prestige=S.prestige||0; S.cleared=S.cleared||false; S.clearRecord=S.clearRecord||null;
+      applyElapsed(); seedMilestones(); seedClearRecord(); render(); checkClear();
       toast("☁️ クラウドの続きを復元した");
     } else {
       cloudSave(true); // ローカルが同等以上 → クラウドへ押し上げ
@@ -1097,6 +1119,7 @@ function start(){
   load();
   applyElapsed();
   seedMilestones();
+  seedClearRecord();
   render();
   checkClear(); // 既にクリア状態で読み込んだ場合もフィナーレを出す
   initCloud();
@@ -1119,6 +1142,7 @@ $("#obi").onclick=()=>window.open("scenario.html","_blank","noopener");
 $("#finNext").onclick=prestigeReset;
 $("#finRead").onclick=()=>window.open("scenario.html","_blank","noopener");
 $("#finClose").onclick=()=>$("#finale").classList.remove("show");
+$("#memento").onclick=()=>showFinale(true);
 $("#empireName").onclick=openNameDialog;
 $("#nameOk").onclick=saveName;
 $("#nameCancel").onclick=closeNameDialog;
