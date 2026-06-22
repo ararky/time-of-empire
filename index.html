@@ -1067,7 +1067,8 @@ async function cloudLoadMerge(){
       S.res=S.res||{}; S.lv=S.lv||{}; S.wonder=S.wonder||{build:null,done:[]};
       S.wonder.done=S.wonder.done||[]; S.milestones=S.milestones||[];
       S.name=S.name||""; S.bestCombo=S.bestCombo||0; S.lifetime=S.lifetime||0;
-      applyElapsed(); seedMilestones(); render();
+      S.prestige=S.prestige||0; S.cleared=S.cleared||false;
+      applyElapsed(); seedMilestones(); render(); checkClear();
       toast("☁️ クラウドの続きを復元した");
     } else {
       cloudSave(true); // ローカルが同等以上 → クラウドへ押し上げ
