@@ -327,6 +327,46 @@
   .obi-text{font-size:12.5px; line-height:1.45; color:var(--ink); font-weight:400; opacity:.92;
     transition:opacity .35s ease; max-width:74%;}
   .obi-more{display:none;}
+
+  /* ===== 発見ビート（克服イベント）===== */
+  #beat{position:fixed; inset:0; z-index:60; display:none; overflow:hidden; background:#070608; cursor:pointer; user-select:none;}
+  #beat.show{display:block; animation:btFade .5s ease;}
+  @keyframes btFade{from{opacity:0}to{opacity:1}}
+  #btScene{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  #beat .bt-tag{position:absolute; top:50%; left:0; right:0; text-align:center; transform:translateY(-50%); font-size:11px; letter-spacing:.3em; color:rgba(255,255,255,.22); z-index:3; pointer-events:none;}
+  #btNarr{position:absolute; top:0; left:0; right:0; padding:30px 26px 0; text-align:center; z-index:5; pointer-events:none;}
+  #btPhase{font-size:10px; letter-spacing:.4em; color:var(--gold); margin-bottom:10px; transition:opacity .6s;}
+  #btTell{font-size:15px; line-height:1.9; color:var(--ink); opacity:.92; min-height:3.4em; transition:opacity .5s;}
+  #btTell b{color:var(--gold); font-weight:500;}
+  #btMeterWrap{position:absolute; left:30px; right:30px; bottom:108px; z-index:6; transition:opacity .5s; max-width:520px; margin:0 auto;}
+  #btMeterLabel{display:flex; justify-content:space-between; font-size:11px; color:var(--dim); margin-bottom:7px; letter-spacing:.06em;}
+  #btMeterLabel span:last-child{color:var(--gold); font-weight:800;}
+  #btMeter{height:12px; border-radius:8px; background:rgba(255,255,255,.07); border:1px solid rgba(224,181,74,.25); overflow:hidden;}
+  #btMeterFill{height:100%; width:0%; border-radius:8px; background:linear-gradient(90deg,#c0341a,#ff7a2a,#ffd34a); box-shadow:0 0 14px rgba(255,140,40,.7); transition:width .08s linear;}
+  #btCue{position:absolute; left:0; right:0; bottom:56px; text-align:center; z-index:6; font-size:13px; font-weight:800; letter-spacing:.1em; color:var(--ink); animation:btCue 1.1s ease-in-out infinite; pointer-events:none;}
+  @keyframes btCue{0%,100%{opacity:.45; transform:translateY(0)}50%{opacity:1; transform:translateY(-3px)}}
+  #btWindWarn{position:absolute; top:132px; left:0; right:0; text-align:center; z-index:6; pointer-events:none; font-size:14px; font-weight:900; letter-spacing:.18em; color:#cfe6ff; opacity:0; transition:opacity .3s; text-shadow:0 0 12px rgba(150,200,255,.7);}
+  #btWindWarn.show{opacity:1; animation:btWiggle .5s ease-in-out infinite;}
+  @keyframes btWiggle{0%,100%{transform:translateX(-3px)}50%{transform:translateX(3px)}}
+  .bt-eye{fill:#ffd24a; filter:drop-shadow(0 0 3px #ff7a2a);}
+  .bt-ripple{position:absolute; border:2px solid rgba(255,180,90,.8); border-radius:50%; pointer-events:none; z-index:4; transform:translate(-50%,-50%); animation:btRip .5s ease-out forwards;}
+  @keyframes btRip{from{width:8px;height:8px;opacity:.9}to{width:72px;height:72px;opacity:0}}
+  .bt-spark{position:absolute; pointer-events:none; z-index:7; font-size:14px; animation:btSpk 1s ease-out forwards;}
+  @keyframes btSpk{0%{opacity:0; transform:translateY(0) scale(.6)}25%{opacity:1}100%{opacity:0; transform:translateY(-50px) scale(1.2)}}
+  .bt-leaf{position:absolute; z-index:5; pointer-events:none; animation:btBlow linear forwards;}
+  @keyframes btBlow{from{transform:translateX(0) rotate(0); opacity:.9}to{transform:translateX(118vw) rotate(380deg); opacity:0}}
+  #btWin{position:absolute; inset:0; z-index:9; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px;}
+  #btWin.show{display:flex; animation:btFade 1s ease;}
+  #btWin .bt-em{font-size:64px; filter:drop-shadow(0 0 24px #ff8a2a); animation:btFlick .25s ease-in-out infinite alternate;}
+  @keyframes btFlick{from{transform:scale(1) rotate(-2deg)}to{transform:scale(1.08) rotate(2deg)}}
+  #btWin .bt-k{font-size:11px; letter-spacing:.4em; color:var(--gold); margin:18px 0 8px;}
+  #btWin .bt-t{font-size:30px; font-weight:800; letter-spacing:.06em; background:linear-gradient(180deg,#fff3d0,#e0b54a 65%,#bf8f2c); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  #btWin .bt-poem{font-size:13.5px; line-height:2; color:var(--dim); margin:16px 0 0; max-width:380px;}
+  #btWin .bt-gains{display:flex; gap:10px; margin:24px 0 6px; flex-wrap:wrap; justify-content:center;}
+  #btWin .bt-gain{background:rgba(255,255,255,.05); border:1px solid rgba(224,181,74,.35); border-radius:12px; padding:11px 16px; font-size:13px; font-weight:700;}
+  #btWin .bt-gain small{display:block; font-size:10px; color:var(--gold); letter-spacing:.1em; margin-bottom:3px; font-weight:800;}
+  #btWin button{margin-top:26px; border:none; border-radius:40px; padding:15px 36px; font-family:inherit; font-weight:900; font-size:15px; color:#3a2810; background:linear-gradient(180deg,#f7da7e,#e0b54a); box-shadow:0 8px 30px rgba(224,181,74,.35); cursor:pointer;}
+  #btWin button:active{transform:translateY(1px);}
 </style>
 </head>
 <body>
@@ -437,6 +477,62 @@
   </div>
 </div>
 
+<!-- 発見ビート（克服イベント）オーバーレイ -->
+<div id="beat">
+  <svg id="btScene" viewBox="0 0 480 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <radialGradient id="btWarm" cx="50%" cy="62%" r="55%">
+        <stop offset="0" stop-color="#ffb24a" stop-opacity=".9"/>
+        <stop offset="40%" stop-color="#d2641e" stop-opacity=".45"/>
+        <stop offset="100%" stop-color="#d2641e" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="btSky" x1="0" y1="0" x2="0" y2="1">
+        <stop id="btSkA" offset="0" stop-color="#0a0e1a"/>
+        <stop id="btSkB" offset="1" stop-color="#161018"/>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="0" width="480" height="800" fill="url(#btSky)"/>
+    <g id="btStars"></g>
+    <ellipse id="btGlow" cx="240" cy="540" rx="360" ry="320" fill="url(#btWarm)" opacity="0"/>
+    <path id="btGround" d="M0 600 Q240 560 480 600 L480 800 L0 800 Z" fill="#0f0b08"/>
+    <g id="btWolfL" opacity="0"><ellipse class="bt-eye" cx="-4" cy="0" rx="2.3" ry="1.4"/><ellipse class="bt-eye" cx="4" cy="0" rx="2.3" ry="1.4"/></g>
+    <g id="btWolfR" opacity="0"><ellipse class="bt-eye" cx="-4" cy="0" rx="2.3" ry="1.4"/><ellipse class="bt-eye" cx="4" cy="0" rx="2.3" ry="1.4"/></g>
+    <g id="btFolk"></g>
+    <g id="btFire" transform="translate(240 560)">
+      <ellipse cx="0" cy="18" rx="34" ry="9" fill="#241712"/>
+      <rect x="-26" y="10" width="52" height="9" rx="4" fill="#1c120c" transform="rotate(-8)"/>
+      <rect x="-26" y="10" width="52" height="9" rx="4" fill="#160e08" transform="rotate(9)"/>
+      <g id="btFlame">
+        <path d="M0 6 C 22 -6 16 -40 0 -64 C -16 -40 -22 -6 0 6 Z" fill="#ff7a26"/>
+        <path id="btFlameInner" d="M0 4 C 12 -6 9 -28 0 -44 C -9 -28 -12 -6 0 4 Z" fill="#ffd24a"/>
+      </g>
+    </g>
+  </svg>
+  <div class="bt-tag mincho" id="btTag">― 文明、はじまりの夜 ―</div>
+  <div id="btNarr">
+    <div id="btPhase">PROLOGUE — 序章</div>
+    <div id="btTell" class="mincho"></div>
+  </div>
+  <div id="btMeterWrap" style="opacity:0">
+    <div id="btMeterLabel"><span>火力</span><span id="btPct">0%</span></div>
+    <div id="btMeter"><div id="btMeterFill"></div></div>
+  </div>
+  <div id="btCue" style="display:none">スペース連打 ／ タップで炎を育てろ 🔥</div>
+  <div id="btWindWarn"></div>
+  <div id="btWin">
+    <div class="bt-em">🔥</div>
+    <div class="bt-k">DISCOVERY — はじめての火</div>
+    <div class="bt-t mincho">火を、手なずけた</div>
+    <div class="bt-poem mincho">その夜、世界で初めて、人の手によって火が運ばれた。<br>自然に怯える生き物から、自然を作り変える生き物へ。</div>
+    <div class="bt-gains">
+      <div class="bt-gain"><small>獲得</small>🍖 食料 ×2</div>
+      <div class="bt-gain"><small>変化</small>🌙 夜の恐怖が消えた</div>
+      <div class="bt-gain"><small>習得</small>🍳 「調理」を覚えた</div>
+    </div>
+    <button id="btNext">文明を、始める ▸</button>
+  </div>
+</div>
+
 <script>
 /* ===== ゲームデータ ===== */
 const AGES = [
@@ -497,6 +593,7 @@ function freshState(){
     prestige:0,       // 周回数（クリアして次の世界へ進んだ回数）
     cleared:false,    // この周をクリア済みか
     clearRecord:null, // クリアの記念スナップショット（いつでも再表示用）
+    discoveries:[],   // 達成した「発見ビート」id（例:'fire'）→ 永久ボーナス
     lastSeen:Date.now(),
   };
 }
@@ -509,6 +606,7 @@ function load(){
     S.bestCombo=S.bestCombo||0;
     S.lifetime=S.lifetime||0; S.milestones=S.milestones||[];
     S.prestige=S.prestige||0; S.cleared=S.cleared||false; S.clearRecord=S.clearRecord||null;
+    S.discoveries=S.discoveries||[];
     return; } }catch(e){}
   S=freshState();
 }
@@ -530,7 +628,8 @@ function rates(){ // 毎秒生産（時代倍率 × ワンダー × 周回 × FE
   const m=AGES[S.age].mult * (1+wonderBonus()) * prestigeMult() * (feverActive()?FEVER_MULT:1); const r={wood:0,food:0,stone:0};
   for(const b of BLD){ if(!b.prod) continue; const lv=S.lv[b.id]||0;
     for(const k in b.prod){ r[k]+=b.prod[k]*lv*m; } }
-  // 食料は人口維持に少し消費（のんびり調整: 軽め）
+  // 発見ボーナス：火を手なずけた → 調理で食料2倍
+  if((S.discoveries||[]).includes('fire')) r.food*=2;
   return r;
 }
 function popCap(){ return 5 + (S.lv.house||0)*3; }
@@ -1195,6 +1294,7 @@ async function cloudLoadMerge(){
       S.wonder.done=S.wonder.done||[]; S.milestones=S.milestones||[];
       S.name=S.name||""; S.bestCombo=S.bestCombo||0; S.lifetime=S.lifetime||0;
       S.prestige=S.prestige||0; S.cleared=S.cleared||false; S.clearRecord=S.clearRecord||null;
+      S.discoveries=S.discoveries||[];
       applyElapsed(); seedMilestones(); seedClearRecord(); render(); checkClear();
       toast("☁️ クラウドの続きを復元した");
     } else {
@@ -1219,6 +1319,103 @@ function cloudSave(force){
   }, {merge:true}).catch(e=>console.warn("[cloud] save失敗:", (e&&e.message)||e));
 }
 
+/* ===== 発見ビート・エンジン（克服イベント。本編と名前空間を分離） ===== */
+const Beat=(function(){
+  const TAP=5.2, DECAY=0.55;
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+  const L=(a,b,t)=>a+(b-a)*t;
+  const mixc=(c1,c2,t)=>`rgb(${Math.round(L(c1[0],c2[0],t))},${Math.round(L(c1[1],c2[1],t))},${Math.round(L(c1[2],c2[2],t))})`;
+  const q=s=>document.querySelector(s);
+  let heat,started,tamed,near,gusting,warnEnd,gustEnd,nextGust,threat,timer,onDone,isOpen=false,built=false;
+  function build(){
+    if(built) return; built=true;
+    let st=""; for(let i=0;i<60;i++){ st+=`<circle cx="${(Math.random()*480)|0}" cy="${(Math.random()*520)|0}" r="${(Math.random()*1+.4).toFixed(1)}" fill="#fff" opacity="${(Math.random()*.5+.2).toFixed(2)}"/>`; }
+    q("#btStars").innerHTML=st;
+    const pts=[[150,596],[330,598],[120,576],[360,574],[240,612]]; let f="";
+    for(const [x,y] of pts){ f+=`<g class="bt-person" transform="translate(${x} ${y})"><circle cx="0" cy="-14" r="7"/><path d="M-9 4 Q0 -16 9 4 Z"/></g>`; }
+    q("#btFolk").innerHTML=f;
+  }
+  function paint(){
+    const b=Math.min(1,heat/100);
+    q("#btGlow").setAttribute("opacity",(b*.95).toFixed(2));
+    q("#btSkA").setAttribute("stop-color",mixc([10,14,26],[40,26,30],b));
+    q("#btSkB").setAttribute("stop-color",mixc([22,16,24],[80,40,28],b));
+    q("#btGround").setAttribute("fill",mixc([15,11,8],[46,28,16],b));
+    const sc=.45+b*1.25, bend=(gusting==='gust')?Math.sin(Date.now()/55)*12:0;
+    q("#btFlame").setAttribute("transform",`scale(${sc.toFixed(2)}) rotate(${bend.toFixed(1)})`);
+    document.querySelectorAll(".bt-person").forEach(p=>p.style.fill=mixc([60,66,84],[210,150,90],b));
+    q("#btPct").textContent=Math.round(b*100)+"%"; q("#btMeterFill").style.width=(b*100)+"%";
+    q("#btFlameInner").style.opacity=(.92+Math.random()*.16).toFixed(2);
+  }
+  function begin(){ if(started) return; started=true;
+    q("#btPhase").textContent="AGE I — 原始時代";
+    q("#btTell").innerHTML='炎は、見つめているだけでは消えていく。<br><b>絶やすな。</b>枝をくべ、息を吹き、火を育てろ。';
+    q("#btMeterWrap").style.opacity="1"; q("#btCue").style.display="block";
+  }
+  function tap(x,y){ if(tamed) return; if(!started) begin();
+    heat=Math.min(100,heat+TAP);
+    const st=q("#beat");
+    const r=document.createElement("div"); r.className="bt-ripple"; r.style.left=x+"px"; r.style.top=y+"px"; st.appendChild(r); setTimeout(()=>r.remove(),500);
+    if(Math.random()<.5){ const s=document.createElement("div"); s.className="bt-spark"; s.textContent="🔥"; s.style.left=x+"px"; s.style.top=y+"px"; st.appendChild(s); setTimeout(()=>s.remove(),1000); }
+    if(heat>=100) win(); paint();
+  }
+  function windTick(){ const now=Date.now();
+    if(!nextGust) nextGust=now+rnd(5000,8500);
+    if(!gusting && now>=nextGust){ gusting='warn'; warnEnd=now+1300; gustEnd=warnEnd+2200; q("#btWindWarn").textContent="⟪ 風が来る ⟫"; q("#btWindWarn").classList.add("show"); }
+    if(gusting==='warn' && now>=warnEnd){ gusting='gust'; q("#btWindWarn").textContent="風だ！押し返せ"; leaves(); }
+    if(gusting && now>=gustEnd){ gusting=false; q("#btWindWarn").classList.remove("show"); nextGust=now+rnd(6500,11000); }
+  }
+  function leaves(){ const st=q("#beat"); for(let i=0;i<6;i++){ const l=document.createElement("div"); l.className="bt-leaf"; l.textContent=Math.random()<.5?"🍃":"·"; l.style.left="-32px"; l.style.top=(16+Math.random()*60)+"%"; l.style.fontSize=(10+Math.random()*12)+"px"; l.style.animationDuration=(.85+Math.random()*.7)+"s"; l.style.animationDelay=(Math.random()*.5)+"s"; st.appendChild(l); setTimeout(()=>l.remove(),2000); } }
+  function wolfTick(){ const b=heat/100;
+    if(b<.45) threat=Math.min(100,threat+(.45-b)*2.4); else threat=Math.max(0,threat-(b-.45)*3.8);
+    setWolves(threat); if(threat>=100) wolfAttack();
+  }
+  function setWolves(t){ const k=t/100, op=t>8?Math.min(1,(t-8)/26):0;
+    q("#btWolfL").setAttribute("transform",`translate(${L(18,196,k)|0} 586)`); q("#btWolfR").setAttribute("transform",`translate(${L(462,284,k)|0} 586)`);
+    q("#btWolfL").setAttribute("opacity",op.toFixed(2)); q("#btWolfR").setAttribute("opacity",op.toFixed(2));
+  }
+  function wolfAttack(){ threat=0; heat=Math.max(0,heat*.3); setWolves(0);
+    q("#btTell").innerHTML='<b style="color:#ff6a4a">狼に火を蹴散らされた…！</b>'; near=true;
+    const st=q("#beat"); const f=document.createElement("div"); f.style.cssText="position:absolute;inset:0;z-index:8;pointer-events:none;background:radial-gradient(circle,rgba(210,40,20,.45),transparent 70%);animation:btFade .55s ease reverse forwards"; st.appendChild(f); setTimeout(()=>f.remove(),560);
+  }
+  function loop(){ if(!isOpen||tamed||!started) return; windTick();
+    const dec=DECAY*(gusting==='gust'?4.2:1); heat=Math.max(0,heat-dec); wolfTick(); paint();
+    if(heat<14 && !near && gusting!=='gust'){ near=true; q("#btTell").innerHTML='<b style="color:#ff6a4a">火が消える…！</b> もっと速く！'; }
+    else if(heat>=24 && near){ near=false; begin(); }
+  }
+  function win(){ tamed=true;
+    q("#btCue").style.display="none"; q("#btMeterWrap").style.opacity="0"; q("#btPhase").style.opacity="0"; q("#btTell").style.opacity="0";
+    q("#btTag").textContent="― そして、夜が明けた ―"; heat=100; paint();
+    if(typeof sndFanfare==="function") sndFanfare(); if(typeof vibe==="function") vibe([0,80,40,80,40,120]);
+    setTimeout(()=>{ q("#btWin").classList.add("show"); const st=q("#beat");
+      for(let i=0;i<22;i++){ const e=document.createElement("div"); e.className="bt-spark"; e.textContent=Math.random()<.5?"✦":"🔥"; e.style.left=(20+Math.random()*60)+"%"; e.style.top=(50+Math.random()*30)+"%"; e.style.fontSize=(10+Math.random()*16)+"px"; e.style.animationDelay=(Math.random()*.6)+"s"; st.appendChild(e); setTimeout(()=>e.remove(),1100); } }, 700);
+  }
+  function open(id, done){
+    build(); onDone=done; isOpen=true;
+    heat=0; started=false; tamed=false; near=false; gusting=false; warnEnd=0; gustEnd=0; nextGust=0; threat=0;
+    q("#btTag").textContent="― 文明、はじまりの夜 ―";
+    q("#btPhase").style.opacity=""; q("#btPhase").textContent="PROLOGUE — 序章";
+    q("#btTell").style.opacity=""; q("#btTell").innerHTML='あるとき、雷が枯れ木を焼いた。<br>みなが逃げ惑うなか、あなたは足を止めた。<br><b>――もし、これを飼うことができたら?</b>';
+    q("#btMeterWrap").style.opacity="0"; q("#btCue").style.display="none"; q("#btWindWarn").classList.remove("show"); q("#btWin").classList.remove("show");
+    setWolves(0); paint();
+    q("#beat").classList.add("show");
+    clearInterval(timer); timer=setInterval(loop,55);
+  }
+  function close(){ isOpen=false; clearInterval(timer); q("#beat").classList.remove("show"); const d=onDone; onDone=null; if(d) d(); }
+  q("#beat").addEventListener("pointerdown",e=>{ if(!isOpen) return; const r=q("#beat").getBoundingClientRect(); tap(e.clientX-r.left,e.clientY-r.top); });
+  window.addEventListener("keydown",e=>{ if(!isOpen) return; if(e.repeat||e.metaKey||e.ctrlKey||e.altKey) return;
+    if(e.key===" "||e.key==="Enter"||e.key.length===1){ e.preventDefault(); const fr=q("#btFire").getBoundingClientRect(),sr=q("#beat").getBoundingClientRect(); tap(fr.left+fr.width/2-sr.left, fr.top+fr.height*0.35-sr.top); } });
+  q("#btNext").addEventListener("click",close);
+  return { open };
+})();
+function maybeOpeningBeat(){
+  if((S.discoveries||[]).includes('fire')) return;
+  // 既に進行のあるセーブ → オープニングを邪魔せず、火は発見済み扱い
+  if((S.lifetime||0)>60 || S.age>0 || S.prestige>0 || S.cleared){ S.discoveries.push('fire'); save(); return; }
+  // 真新しい始まり → 「文明、はじまりの夜」
+  Beat.open('fire', ()=>{ if(!S.discoveries.includes('fire')) S.discoveries.push('fire'); save(); cloudSave(true); render(); });
+}
+
 /* ===== 起動 ===== */
 function start(){
   load();
@@ -1229,6 +1426,7 @@ function start(){
   render();
   startCelestial();
   checkClear(); // 既にクリア状態で読み込んだ場合もフィナーレを出す
+  maybeOpeningBeat(); // 新規なら「文明、はじまりの夜（火の手なずけ）」
   initCloud();
   setInterval(()=>cloudSave(false), 20000);
   if(pendingWonder){ const w=pendingWonder; pendingWonder=null; setTimeout(()=>celebrateWonder(w),700); }
@@ -1255,7 +1453,7 @@ $("#nameOk").onclick=saveName;
 $("#nameCancel").onclick=closeNameDialog;
 $("#nameInput").addEventListener("keydown",e=>{ if(e.key==="Enter") saveName(); });
 $("#reset").onclick=()=>{
-  if(confirm("帝国を最初からやり直す？この端末の進行は消えます")){ S=freshState(); save(); render(); }
+  if(confirm("帝国を最初からやり直す？この端末の進行は消えます")){ S=freshState(); obiInit=false; _skySig=''; save(); render(); maybeOpeningBeat(); }
 };
 start();
 </script>
