@@ -11,7 +11,10 @@
     --accent:#e0a44a; --accent2:#9fcf7a; --gold:#e0b54a;
     --shadow:0 12px 34px rgba(0,0,0,.5);
   }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;          /* ダブルタップでズームしない */
+    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; /* タップで文字選択/長押しメニューを出さない */
+  }
   html,body{margin:0; padding:0; overflow-x:hidden;}
   body{
     font-family:-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;
@@ -19,6 +22,8 @@
     min-height:100vh; display:flex; justify-content:center;
     transition:background 1.1s ease; -webkit-font-smoothing:antialiased;
   }
+  /* 名前入力欄だけは選択・編集できるように戻す */
+  input{-webkit-user-select:text; user-select:text; -webkit-touch-callout:default;}
   #bgfx{position:fixed; inset:0; z-index:-2; pointer-events:none;
     background:
       radial-gradient(125% 80% at 50% -8%, rgba(201,123,60,.20), transparent 58%),
@@ -76,7 +81,7 @@
     border:1px solid rgba(224,181,74,.3); border-radius:16px;
     height:230px; margin:10px 0 12px; overflow:hidden; position:relative;
     box-shadow:var(--shadow), inset 0 0 0 1px rgba(255,255,255,.04);
-    cursor:pointer; user-select:none;
+    user-select:none;
   }
   @media(min-width:640px){
     #scene{
@@ -84,7 +89,6 @@
       margin-left:50%; transform:translateX(-50%); border-radius:20px;
     }
   }
-  #scene:active #world{filter:brightness(1.06);}
   #world{position:absolute; inset:0; width:100%; height:100%; display:block; transition:filter .1s;}
   #mtnFar{fill:#26303f;} #mtnNear{fill:#1a212c;} #ground{fill:#14110b;}
   #sun{filter:drop-shadow(0 0 10px #ffd27a);} #moon{filter:drop-shadow(0 0 7px #cfe0ff);}
@@ -94,6 +98,7 @@
   .star{fill:#fff; animation:twk ease-in-out infinite;}
   @keyframes twk{0%,100%{opacity:.25}50%{opacity:1}}
   .b-body{fill:#0e1118;} .b-roof{fill:#0a0c12;}
+  .b-ruin{fill:#181410; opacity:.92;} /* 廃墟：崩れた壁 */
   .b-mon{fill:#1a1408;} /* 偉業モニュメント */
   .win{fill:#ffd27a; fill-opacity:var(--night,0);}   /* 夜に灯る窓 */
   .beacon{fill:#ffe6a0; fill-opacity:.9; filter:drop-shadow(0 0 3px #ffcf7a);} /* 偉業の標識：常時点灯 */
@@ -213,8 +218,8 @@
   #upbarFill{height:100%; width:0%; border-radius:6px; transition:width .3s ease, background .4s ease;
     background:linear-gradient(90deg,#5e8f44,#9fcf7a);}
   #upHint{font-size:10px; color:var(--dim); margin-top:5px; opacity:.8; letter-spacing:.02em;}
-  #measures{display:flex; gap:7px; margin-top:9px;}
-  .ms{flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; font-family:inherit;
+  #measures{display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-top:9px;}
+  .ms{display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; font-family:inherit;
     background:linear-gradient(180deg, rgba(60,48,26,.6), rgba(30,22,12,.65)); border:1px solid rgba(224,181,74,.28);
     border-radius:11px; padding:8px 4px; box-shadow:0 3px 0 rgba(0,0,0,.3); transition:transform .05s;}
   .ms:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.3);}
@@ -224,6 +229,46 @@
   .ms.locked:active{transform:none;}
   .ms.active{border-color:var(--accent2); box-shadow:0 0 14px rgba(159,207,122,.4), 0 3px 0 rgba(0,0,0,.3); animation:upPulse 1s ease-in-out infinite;}
   .ms.active b{color:var(--accent2);}
+
+  /* 村人の采配 */
+  #allocHead{text-align:center; font-size:13px; color:var(--dim); margin:6px 0 2px;}
+  #allocHead b{color:#fff; font-size:18px; font-weight:900;} #allocHead .free{color:var(--gold);}
+  #growthBar{height:5px; border-radius:4px; background:rgba(255,255,255,.07); overflow:hidden; max-width:240px; margin:7px auto 0;}
+  #growthFill{height:100%; width:0%; background:linear-gradient(90deg,#7fae5a,#bcd84a); transition:width .3s;}
+  #alloc{display:flex; flex-direction:column; gap:9px;}
+  .ajob{display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:14px;
+    background:linear-gradient(180deg,rgba(50,40,24,.5),rgba(28,21,12,.6)); border:1px solid var(--line); box-shadow:0 3px 0 rgba(0,0,0,.3);}
+  .ajob .aem{font-size:26px; width:38px; height:38px; line-height:38px; text-align:center; flex-shrink:0;
+    background:radial-gradient(circle at 50% 40%, rgba(224,181,74,.16), rgba(0,0,0,.15)); border-radius:11px; border:1px solid rgba(224,181,74,.18);}
+  .ajob .ainfo{flex:1; min-width:0;}
+  .ajob .aname{font-weight:900; font-size:15px; color:#fff;}
+  .ajob .aout{font-size:11px; color:var(--gold); font-weight:700; margin-top:1px;}
+  .ajob .appl{margin-top:4px; height:14px; line-height:14px; font-size:13px; letter-spacing:1px; color:#cbb88a; overflow:hidden; white-space:nowrap;}
+  .astep{display:flex; align-items:center; gap:7px; flex-shrink:0;}
+  .astep button{width:34px; height:34px; border:none; border-radius:10px; font-size:19px; font-weight:900; font-family:inherit;
+    color:#3a2810; background:linear-gradient(180deg,#ffe27e,#e6b53e); box-shadow:0 3px 0 #a8761c; cursor:pointer;}
+  .astep button:active{transform:translateY(2px); box-shadow:0 1px 0 #a8761c;}
+  .astep button:disabled{background:rgba(255,255,255,.05); color:var(--dim); box-shadow:none; cursor:not-allowed;}
+  .astep .acnt{min-width:22px; text-align:center; font-size:19px; font-weight:900; color:#fff;}
+
+  /* 自治（自動配置） */
+  #autoCtl{margin-bottom:9px;}
+  .auto-buy{width:100%; border:none; border-radius:12px; padding:11px; font-family:inherit; cursor:pointer;
+    font-weight:900; font-size:13px; color:#3a2810; background:linear-gradient(180deg,#ffe27e,#e6b53e); box-shadow:0 3px 0 #a8761c;}
+  .auto-buy:active{transform:translateY(2px); box-shadow:0 1px 0 #a8761c;}
+  .auto-buy.locked{background:rgba(255,255,255,.05); color:var(--dim); box-shadow:none; cursor:not-allowed;}
+  .auto-buy .ac{display:block; font-size:10px; font-weight:600; opacity:.85; margin-top:2px;}
+  .auto-row{display:flex; align-items:center; gap:9px;}
+  .auto-tog{border:none; border-radius:10px; padding:9px 14px; font-family:inherit; font-weight:900; font-size:12px; cursor:pointer;
+    color:var(--dim); background:rgba(255,255,255,.06); border:1px solid var(--line);}
+  .auto-tog.on{color:#3a2810; background:linear-gradient(180deg,#bcd84a,#9fcf7a); border:none; box-shadow:0 0 12px rgba(159,207,122,.4);}
+  .auto-lv{flex:1; font-size:13px; font-weight:800; color:var(--ink);}
+  .auto-lv small{color:var(--gold); font-weight:700; margin-left:6px; font-size:10px;}
+  .auto-up{border:none; border-radius:10px; padding:9px 12px; font-family:inherit; font-weight:800; font-size:11px; cursor:pointer;
+    color:#3a2810; background:linear-gradient(180deg,#ffe27e,#e6b53e); box-shadow:0 3px 0 #a8761c;}
+  .auto-up:active{transform:translateY(2px); box-shadow:0 1px 0 #a8761c;}
+  .auto-up.locked{background:rgba(255,255,255,.05); color:var(--dim); box-shadow:none; cursor:not-allowed;}
+  .auto-max{font-size:11px; color:var(--gold); font-weight:800;}
   #upkeep.warn #upbarFill{background:linear-gradient(90deg,#c08a2a,#f5c14a);}
   #upkeep.warn #upPct{color:#f5c14a;}
   #upkeep.danger #upbarFill{background:linear-gradient(90deg,#b83a22,#ff6a4a);}
@@ -499,6 +544,40 @@
   .b4-page{position:absolute; width:14px; height:18px; background:#efe3c4; border:1px solid #cbb88a; border-radius:2px; pointer-events:none; z-index:7; animation:b4page .9s ease-out forwards;}
   @keyframes b4page{0%{opacity:0; transform:translateY(0) rotate(0)}20%{opacity:1}100%{opacity:0; transform:translateY(-90px) rotate(40deg)}}
   .b4-perfect{position:absolute; z-index:8; font-size:13px; font-weight:900; letter-spacing:.1em; color:#ffd27a; pointer-events:none; animation:btSpk .9s ease-out forwards; text-shadow:0 0 10px rgba(255,180,90,.7);}
+
+  /* ===== 蒸気機関（圧力調整ビート） ===== */
+  #beat5{position:fixed; inset:0; z-index:60; display:none; overflow:hidden; user-select:none; cursor:pointer;
+    background:radial-gradient(120% 80% at 50% 30%, #1d1712, #0a0807 72%);}
+  #beat5.show{display:flex; flex-direction:column; align-items:center; justify-content:center; padding:26px; animation:btFade .5s ease;}
+  #beat5 .b5-phase{font-size:10px; letter-spacing:.4em; color:var(--gold); margin-bottom:16px;}
+  #b5Tell{font-size:15px; line-height:1.9; color:var(--ink); text-align:center; max-width:440px; min-height:3.4em; transition:opacity .4s;}
+  #b5Tell b{color:var(--gold); font-weight:500;}
+  #b5Gauge{position:relative; width:min(88vw,440px); height:36px; margin-top:30px; border-radius:10px; overflow:hidden;
+    background:linear-gradient(180deg,#241d12,#15100a); border:1px solid rgba(224,181,74,.25);}
+  #b5Band{position:absolute; top:0; bottom:0; left:40%; width:35%; background:rgba(120,200,90,.16);
+    border-left:1px solid rgba(140,220,110,.55); border-right:1px solid rgba(140,220,110,.55);}
+  #b5Fill{position:absolute; top:0; bottom:0; left:0; width:45%; background:linear-gradient(90deg,#7aa84a,#bcd84a); transition:width .05s linear;}
+  #b5Fill.red{background:linear-gradient(90deg,#c0532a,#ff6a3a);}
+  #beat5.blow #b5Gauge{animation:b4miss .3s ease;}
+  #b5Power{margin-top:18px; font-size:13px; font-weight:800; color:var(--ink);} #b5Power b{color:var(--gold);}
+  #b5Cue{margin-top:10px; font-size:12px; color:var(--dim); animation:btCue 1.1s ease-in-out infinite;}
+
+  /* ===== 世界をつなぐ網（接続ビート） ===== */
+  #beat6{position:fixed; inset:0; z-index:60; display:none; overflow:hidden; user-select:none;
+    background:radial-gradient(120% 80% at 50% 20%, #0e1726, #07090f 72%);}
+  #beat6.show{display:flex; flex-direction:column; align-items:center; justify-content:center; padding:26px; animation:btFade .5s ease;}
+  #beat6 .b6-phase{font-size:10px; letter-spacing:.4em; color:#6fd0c0; margin-bottom:14px;}
+  #b6Tell{font-size:15px; line-height:1.9; color:var(--ink); text-align:center; max-width:440px; min-height:3.4em; transition:opacity .4s;}
+  #b6Tell b{color:#7fd0e0; font-weight:500;}
+  #b6Field{position:relative; width:min(92vw,440px); height:min(58vh,420px); margin-top:18px;}
+  #b6Lines{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
+  .b6-node{position:absolute; width:34px; height:34px; border-radius:50%; transform:translate(-50%,-50%); cursor:pointer; z-index:2;
+    background:radial-gradient(circle at 40% 35%,#d8eeff,#4a90d9); box-shadow:0 0 18px rgba(90,170,235,.85); border:2px solid #cfe6ff;
+    animation:b6node 1.6s ease-in forwards;}
+  @keyframes b6node{0%{opacity:0; transform:translate(-50%,-50%) scale(.4)}14%{opacity:1; transform:translate(-50%,-50%) scale(1)}82%{opacity:1}100%{opacity:0; transform:translate(-50%,-50%) scale(.7)}}
+  .b6-node.hit{animation:b6hit .4s ease forwards;}
+  @keyframes b6hit{0%{opacity:1; transform:translate(-50%,-50%) scale(1)}100%{opacity:0; transform:translate(-50%,-50%) scale(1.9)}}
+  #b6Count{margin-top:16px; font-size:13px; font-weight:800; color:var(--ink);} #b6Count b{color:#7fd0e0;}
 </style>
 </head>
 <body>
@@ -541,7 +620,7 @@
     <div id="decayVeil"></div>
     <div class="best-combo" id="bestCombo"></div>
     <div class="combo-badge" id="comboBadge"><span class="n">0</span><span class="lbl">COMBO</span></div>
-    <div class="tap-hint" id="tapHint">タップで手入れ・採取 👆</div>
+    <div class="tap-hint" id="tapHint">村人を仕事に割り振って文明を育てる</div>
   </div>
 
   <div id="resources"></div>
@@ -549,11 +628,17 @@
   <div id="upkeep">
     <div class="up-head"><span id="upLabel">🛠 手入れ</span><span id="upPct">良好</span></div>
     <div id="upbar"><div id="upbarFill"></div></div>
-    <div id="upHint">タップで手入れ。放置すると荒廃し、やがて建物が朽ちる</div>
+    <div id="upHint">村人を「手入れ」に割り振ると荒廃が戻る。放置すると建物が朽ちる</div>
     <div id="measures"></div>
   </div>
 
-  <div class="pop" id="popLine">人口 0 / 5</div>
+  <div id="allocHead">
+    <span><b id="popN">6</b> 人　空き <b id="popFree" class="free">0</b></span>
+    <div id="growthBar"><div id="growthFill"></div></div>
+  </div>
+  <div class="section-title">村人の采配</div>
+  <div id="autoCtl"></div>
+  <div id="alloc"></div>
 
   <div class="section-title">たてもの</div>
   <div id="buildings"></div>
@@ -740,6 +825,47 @@
   </div>
 </div>
 
+<!-- 蒸気機関（圧力調整ビート）オーバーレイ -->
+<div id="beat5">
+  <div class="b5-phase">AGE V — 産業時代</div>
+  <div id="b5Tell" class="mincho"></div>
+  <div id="b5Gauge"><div id="b5Band"></div><div id="b5Fill"></div></div>
+  <div id="b5Power">出力 <b>0</b> / 100</div>
+  <div id="b5Cue">タップ／スペースで蒸気を逃がし、緑の帯を保て</div>
+  <div id="b5Win" class="bt-win">
+    <div class="bt-em">🚂</div>
+    <div class="bt-k">DISCOVERY — 蒸気機関</div>
+    <div class="bt-t mincho">無尽蔵の力を、得た</div>
+    <div class="bt-poem mincho">疲れず、眠らず、薪と石炭さえあれば永遠に働く。<br>人類は、もう自分の腕の長さに縛られない。</div>
+    <div class="bt-gains">
+      <div class="bt-gain"><small>獲得</small>⚙️ 全生産 +40%</div>
+      <div class="bt-gain"><small>変化</small>🏭 機械が休まず働く</div>
+      <div class="bt-gain"><small>習得</small>🔥 「動力」を覚えた</div>
+    </div>
+    <button id="b5Next">煙突に、火を入れる ▸</button>
+  </div>
+</div>
+
+<!-- 世界をつなぐ網（接続ビート）オーバーレイ -->
+<div id="beat6">
+  <div class="b6-phase">AGE VI — 現代</div>
+  <div id="b6Tell" class="mincho"></div>
+  <div id="b6Field"><svg id="b6Lines"></svg></div>
+  <div id="b6Count">接続 <b>0</b> / 12</div>
+  <div id="b6Win" class="bt-win">
+    <div class="bt-em">🌐</div>
+    <div class="bt-k">DISCOVERY — 世界をつなぐ網</div>
+    <div class="bt-t mincho">世界を、ひとつに繋いだ</div>
+    <div class="bt-poem mincho">世界中の計算機が、一本の網でつながる。<br>知識は瞬時に共有され、発見の速度が桁違いになる。</div>
+    <div class="bt-gains">
+      <div class="bt-gain"><small>獲得</small>📡 全生産 +50%</div>
+      <div class="bt-gain"><small>変化</small>🌍 知が瞬時に行き渡る</div>
+      <div class="bt-gain"><small>習得</small>💻 「接続」を覚えた</div>
+    </div>
+    <button id="b6Next">未来へ、繋ぐ ▸</button>
+  </div>
+</div>
+
 <script>
 /* ===== ゲームデータ ===== */
 const AGES = [
@@ -758,12 +884,15 @@ const RES = [
 ];
 
 // 建物: prod=毎秒生産(レベルあたり), 建設に人口を使う production系か判定
+// 建物＝効率アップの施設（村人ひとりの生産量を上げる）。家は村人の上限を増やす。
 const BLD = [
-  {id:"house",  emoji:"🏠", name:"家",        desc:"人口の上限 +3",        prod:null,                pop:+3},
-  {id:"lumber", emoji:"🌲", name:"きこり小屋", desc:"木を生産",             prod:{wood:0.5},          pop:-1},
-  {id:"farm",   emoji:"🌾", name:"畑",        desc:"食料を生産",           prod:{food:0.5},          pop:-1},
-  {id:"quarry", emoji:"⛏️", name:"採石場",     desc:"石を生産",             prod:{stone:0.35},        pop:-1},
+  {id:"house",  emoji:"🏠", name:"家",        desc:"村人の上限 +3",         eff:null,   pop:+3},
+  {id:"lumber", emoji:"🌲", name:"きこり小屋", desc:"木こりの効率 +30%/Lv",  eff:"wood"},
+  {id:"farm",   emoji:"🌾", name:"畑",        desc:"畑の効率 +30%/Lv",      eff:"food"},
+  {id:"quarry", emoji:"⛏️", name:"採石場",     desc:"採石の効率 +30%/Lv",    eff:"stone"},
 ];
+const BASE_RATE = {wood:0.55, food:0.7, stone:0.4};  // 村人ひとりあたり/秒
+const JOB_BLD = {wood:"lumber", food:"farm", stone:"quarry"};
 
 const BASE_COST = {
   house:  {wood:10, stone:5},
@@ -793,10 +922,18 @@ function freshState(){
     name:"",
     res:{wood:15, food:15, stone:8},
     lv:{house:1, lumber:1, farm:1, quarry:0},
+    pop:6,                                  // 村人の総数（食料で増える・家で上限）
+    assign:{wood:2, food:3, stone:0, tend:1}, // 仕事への配分
+    grow:0,                                 // 人口成長の貯まり
+    autoLv:0,                               // 自治の練度（0=手動 / 1村長 2評議会 3官僚制）
+    autoOn:false,                           // 自治ON/OFF
+
     wonder:{ build:null, done:[] }, // build={age,startedAt} 建設中 / done=[age,...] 完成済み
     bestCombo:0,
     decay:0,          // 荒廃度 0-100（手入れしないと上がる→生産低下→建物が朽ちる）
     masons:0,         // 補修班Lv（荒廃の進む速さを永続で下げる）
+    watch:0,          // 見張りLv（放置中も自動で手入れ＝荒廃を下げる）
+    ruins:0,          // 朽ちて廃墟になった数（世界に廃墟として表れる）
     lifetime:0,       // 累計生産量（採取+自動+留守ぶん）
     milestones:[],    // 達成済みマイルストーンid
     prestige:0,       // 周回数（クリアして次の世界へ進んだ回数）
@@ -813,9 +950,13 @@ function load(){
     S.wonder=S.wonder||{build:null,done:[]}; S.wonder.done=S.wonder.done||[];
     S.name=S.name||"";
     S.bestCombo=S.bestCombo||0;
-    S.lifetime=S.lifetime||0; S.milestones=S.milestones||[]; S.decay=S.decay||0; S.masons=S.masons||0;
+    S.lifetime=S.lifetime||0; S.milestones=S.milestones||[]; S.decay=S.decay||0; S.masons=S.masons||0; S.watch=S.watch||0; S.ruins=S.ruins||0;
     S.prestige=S.prestige||0; S.cleared=S.cleared||false; S.clearRecord=S.clearRecord||null;
     S.discoveries=S.discoveries||[];
+    // 采配システムへの移行（旧セーブに村人/配分が無ければ補完）
+    if(typeof S.pop!=='number'){ S.pop=Math.max(6,5+(S.lv.house||1)*3); }
+    if(!S.assign){ S.assign={wood:Math.max(1,S.lv.lumber||1), food:Math.max(1,S.lv.farm||1), stone:S.lv.quarry||0, tend:1}; }
+    S.grow=S.grow||0; S.autoLv=S.autoLv||0; S.autoOn=S.autoOn||false;
     return; } }catch(e){}
   S=freshState();
 }
@@ -833,28 +974,38 @@ function wonderBonus(){ // 完成済みワンダーの合計ボーナス(0.35 = 
 }
 const PRESTIGE_BONUS = 0.75; // 1周ごとに全生産 +75% を永久継承
 function prestigeMult(){ return 1 + (S.prestige||0)*PRESTIGE_BONUS; }
-function civSize(){ return (S.lv.house||0)+(S.lv.lumber||0)+(S.lv.farm||0)+(S.lv.quarry||0)+((S.wonder&&S.wonder.done.length)||0)*2; }
+/* ===== 村人の采配 ===== */
+function popCap(){ return 5 + (S.lv.house||0)*3; }
+function assignedTotal(){ const a=S.assign||{}; return (a.wood||0)+(a.food||0)+(a.stone||0)+(a.tend||0); }
+function freeVillagers(){ return (S.pop||0)-assignedTotal(); }
+function producers(){ const a=S.assign||{}; return (a.wood||0)+(a.food||0)+(a.stone||0); }
+function requiredTend(){ return Math.ceil(producers()*0.45); }
+function civSize(){ return (S.pop||6) + ((S.wonder&&S.wonder.done.length)||0)*2; }
 let rallyUntil=0, repairCdUntil=0, rallyCdUntil=0;
 function rallyActive(){ return Date.now()<rallyUntil; }
-function decayRate(){ // %/秒。号令中は止まる、補修班Lvで遅くなる
-  if(rallyActive()) return 0;
-  return (0.06 + civSize()*0.012) * Math.pow(0.78, S.masons||0);
+function decayRate(){ // 純荒廃/秒：生産で増え、手入れ配分＋見張りで減る（号令中は強制回復）
+  if(rallyActive()) return -2.4;
+  const wear = producers()*0.42 * Math.pow(0.82, S.masons||0);
+  const care = (S.assign&&S.assign.tend||0)*1.1 + (S.watch||0)*0.45;
+  return wear - care;
 }
 const DECAY_MAXPEN=0.85;                                                // 荒廃100%で生産が15%まで落ちる
 function decayPenalty(){ return 1 - (S.decay||0)/100 * DECAY_MAXPEN; }
-function rates(){ // 毎秒生産（時代倍率 × ワンダー × 周回 × FEVER × 荒廃ペナルティ）
-  const m=AGES[S.age].mult * (1+wonderBonus()) * prestigeMult() * (feverActive()?FEVER_MULT:1) * decayPenalty() * (rallyActive()?1.5:1); const r={wood:0,food:0,stone:0};
-  for(const b of BLD){ if(!b.prod) continue; const lv=S.lv[b.id]||0;
-    for(const k in b.prod){ r[k]+=b.prod[k]*lv*m; } }
-  // 発見ボーナス
+function rates(){ // 毎秒生産（配分人数 × 効率 × 時代 × ワンダー × 周回 × 荒廃 × 発見）
+  const m=AGES[S.age].mult * (1+wonderBonus()) * prestigeMult() * decayPenalty() * (rallyActive()?1.3:1);
+  const r={wood:0,food:0,stone:0}; const a=S.assign||{};
+  for(const res of ['wood','food','stone']){
+    const blv=S.lv[JOB_BLD[res]]||0;
+    r[res] = (a[res]||0) * BASE_RATE[res] * (1 + blv*0.3) * m;
+  }
   const disc=S.discoveries||[];
-  if(disc.includes('fire')) r.food*=2;                       // 火→調理で食料2倍
-  if(disc.includes('writing')){ r.wood*=1.3; r.food*=1.3; r.stone*=1.3; } // 文字→全生産+30%
-  if(disc.includes('plague')){ r.wood*=1.2; r.food*=1.2; r.stone*=1.2; }  // 災い克服→全生産+20%
+  if(disc.includes('fire')) r.food*=2;
+  if(disc.includes('writing')){ r.wood*=1.3; r.food*=1.3; r.stone*=1.3; }
+  if(disc.includes('plague')){ r.wood*=1.2; r.food*=1.2; r.stone*=1.2; }
+  if(disc.includes('steam')){ r.wood*=1.4; r.food*=1.4; r.stone*=1.4; }
+  if(disc.includes('network')){ r.wood*=1.5; r.food*=1.5; r.stone*=1.5; }
   return r;
 }
-function popCap(){ return 5 + (S.lv.house||0)*3; }
-function popUsed(){ return (S.lv.lumber||0)+(S.lv.farm||0)+(S.lv.quarry||0); }
 function canAfford(c){ for(const k in c){ if((S.res[k]||0) < c[k]) return false; } return true; }
 function devTotal(){ let t=0; for(const id in S.lv) t+=S.lv[id]; return t; }
 
@@ -868,10 +1019,11 @@ function applyElapsed(){
     for(const k in r){ const g=r[k]*capped; if(g>0){ S.res[k]=(S.res[k]||0)+g; got[k]=g; S.lifetime+=g; } }
     showOffline(capped, got);
   }
-  // 留守中に荒廃が進む（長く放置＝荒れた村が待っている）
+  // 留守中に荒廃が進む（見張りがいれば抑えられる）
   if(capped>3){
     const before=S.decay||0;
-    S.decay=Math.min(100,(S.decay||0)+decayRate()*capped);
+    const net=decayRate();   // 生産で増え、手入れ配分＋見張りで減る（純荒廃/秒）
+    S.decay=Math.max(0,Math.min(100,(S.decay||0)+net*capped));
     if(S.decay>=100){ crumble(); toast("🏚️ 留守のあいだに、村が荒れ果てた…手入れを。"); }
     else if(S.decay-before>20){ toast("⚠️ 留守のあいだに村が荒れた（荒廃 "+Math.round(S.decay)+"%）。手入れを。"); }
   }
@@ -915,25 +1067,22 @@ function render(){
     return `<div class="res"><span class="ic">${res.ic}</span><span class="rv"><span class="val">${fmt(S.res[res.id]||0)}</span><span class="rate ${rate?'':'zero'}">${rate?('+'+rate.toFixed(1)+'/秒'):'—'}</span></span></div>`;
   }).join("");
 
-  // population
-  const used=popUsed(), cap=popCap();
-  $("#popLine").textContent=`👷 はたらき手 ${used} / ${cap}`;
+  // 村人の采配パネル
+  renderAlloc();
 
   // 生きてる世界（街のシルエットが育つ・村人が人口で増える）
   renderSkyline();
   renderVillagers();
   renderUpkeep();
 
-  // buildings
+  // buildings（効率アップ施設）
   $("#buildings").innerHTML=BLD.map(b=>{
     const lv=S.lv[b.id]||0; const c=costOf(b.id);
     const costStr=Object.keys(c).map(k=>{const res=RES.find(x=>x.id===k);return res.ic+fmt(c[k]);}).join(" ");
-    const needPop=b.pop<0; // production建物は人口が要る
-    const popBlocked=needPop && used>=cap;
     const afford=canAfford(c);
-    const ok=afford && !popBlocked;
+    const ok=afford;
     let label = lv===0? "建てる" : "Lv"+(lv+1)+"へ";
-    let sub = popBlocked? "はたらき手が足りない" : costStr;
+    let sub = costStr;
     return `<div class="bld">
       <div class="emoji">${b.emoji}</div>
       <div class="info">
@@ -1075,7 +1224,8 @@ function renderSkyline(){
   const sky=$("#skyline"); if(!sky) return;
   const done=(S.wonder&&S.wonder.done)||[];
   const total=(S.lv.house||0)+(S.lv.lumber||0)+(S.lv.farm||0)+(S.lv.quarry||0);
-  const sig=S.age+"|"+total+"|"+done.length;
+  const ruins=Math.min(S.ruins||0,8);
+  const sig=S.age+"|"+total+"|"+done.length+"|"+ruins;
   if(sig===_skySig) return; _skySig=sig;
   const era=S.age, base=178, count=Math.min(total,13);
   // スロット幅は固定（建てても既存の建物はずれない・村は右へ伸びる）
@@ -1086,7 +1236,16 @@ function renderSkyline(){
     html+=building(x,base,w,h,era,rnd,false); x+=SLOT; }
   for(let k=0;k<done.length;k++){ const rnd=rngFrom(977+k*13);
     html+=building(x,base,11+rnd()*3,38+era*5,era,rnd,true); x+=SLOT; }
+  for(let k=0;k<ruins;k++){ const rnd=rngFrom(601+k*17); html+=ruin(x,base,12+rnd()*6,rnd); x+=SLOT; }
   sky.innerHTML=html;
+}
+// 廃墟：屋根が抜け、壁がギザギザに崩れた影
+function ruin(x,base,w,rnd){
+  const h=8+rnd()*9, top=base-h, mid=x+w/2;
+  let s=`<path class="b-ruin" d="M${x.toFixed(1)} ${base} L${x.toFixed(1)} ${(top+2).toFixed(1)} L${(x+w*0.2).toFixed(1)} ${(top+h*0.4).toFixed(1)} L${(x+w*0.42).toFixed(1)} ${top.toFixed(1)} L${(x+w*0.6).toFixed(1)} ${(top+h*0.5).toFixed(1)} L${(x+w*0.8).toFixed(1)} ${(top+1).toFixed(1)} L${(x+w).toFixed(1)} ${(top+h*0.3).toFixed(1)} L${(x+w).toFixed(1)} ${base} Z"/>`;
+  // 崩れた瓦礫
+  if(rnd()<0.6) s+=`<rect class="b-ruin" x="${(x+w+1).toFixed(1)}" y="${(base-3).toFixed(1)}" width="3.5" height="3" rx="1"/>`;
+  return s;
 }
 function building(x,base,w,h,era,rnd,mon){
   const top=base-h; let s="";
@@ -1134,22 +1293,20 @@ function startCelestial(){
   clearInterval(_celTimer); _celTimer=setInterval(frame, 240);
 }
 function hintText(){
-  if(devTotal()<=2) return "ヒント: まずは🌲きこり小屋と🌾畑で資源を増やそう";
-  const used=popUsed(), cap=popCap();
-  if(used>=cap) return "ヒント: 🏠家を建てると、はたらき手の上限が増える";
+  if(freeVillagers()>0) return "ヒント: 空いた村人を仕事に割り振ろう（生産か手入れ）";
+  if((S.assign&&S.assign.tend||0) < requiredTend()) return "⚠️ 手入れの村人が足りない。荒れていく";
   const next=AGES[S.age+1];
   if(next && devTotal()>=next.need) return "✨ 次の時代に進めるよ！";
-  return "コツ: 閉じても資源は貯まる。また覗きにおいで";
+  return "コツ: 食料が満ちると村人が増える。育てて采配しよう";
 }
 
 /* ===== アクション ===== */
 function buildIt(id){
-  const c=costOf(id); const b=BLD.find(x=>x.id===id);
-  const used=popUsed(), cap=popCap();
-  if(b.pop<0 && used>=cap){ toast("はたらき手が足りない。🏠家を建てよう"); return; }
+  const c=costOf(id);
   if(!canAfford(c)){ flash(id); return; }
   for(const k in c) S.res[k]-=c[k];
   S.lv[id]=(S.lv[id]||0)+1;
+  if(S.ruins>0){ S.ruins--; _skySig=""; } // 建て直し＝廃墟をひとつ片付ける
   checkMilestones();
   save(); render(); buildFx();
 }
@@ -1502,9 +1659,10 @@ function crumble(){ // 荒廃の極み：建物が1つ朽ちる
   if(!cands.length){ S.decay=80; return; }
   const id=cands[Math.floor(Math.random()*cands.length)];
   S.lv[id]=Math.max(0,(S.lv[id]||0)-1);
+  S.ruins=(S.ruins||0)+1;       // 廃墟が世界に残る
   S.decay=78; _skySig=""; // 立て直し余地を残す
   const b=BLD.find(x=>x.id===id);
-  toast("🏚️ 手入れを怠り、"+(b?b.name:"建物")+"が朽ちた…");
+  toast("🏚️ 手入れを怠り、"+(b?b.name:"建物")+"が廃墟になった…");
   if(typeof beep==="function") beep(120,0.3,"sawtooth",0.09);
 }
 function tend(amount){ S.decay=Math.max(0,(S.decay||0)-amount); } // 手入れで荒廃を戻す
@@ -1533,6 +1691,26 @@ function buyMasons(){
   if(typeof beep==="function") beep(440,0.12,"square",0.09);
   save(); render();
 }
+function watchCost(){ const p=Math.pow(1.8,S.watch||0); return {wood:Math.ceil(55*p), stone:Math.ceil(35*p)}; }
+function buyWatch(){
+  const c=watchCost(); if(!canAfford(c)){ toast("資源が足りない"); return; }
+  for(const k in c) S.res[k]-=c[k]; S.watch=(S.watch||0)+1;
+  toast("🔔 見張り Lv."+S.watch+"：放置中も自動で手入れ");
+  if(typeof beep==="function") beep(660,0.12,"sine",0.09);
+  save(); render();
+}
+let consolidateCdUntil=0;
+function doConsolidate(){ // 間引き：建物を1つ畳んで荒廃を大きく下げる（資源不要・成長を犠牲）
+  if(Date.now()<consolidateCdUntil) return;
+  const cands=["lumber","farm","quarry","house"].filter(id=>(S.lv[id]||0)>1);
+  if(!cands.length){ toast("畳める建物がない"); return; }
+  const id=cands[Math.floor(Math.random()*cands.length)];
+  S.lv[id]=(S.lv[id]||0)-1; tend(40); consolidateCdUntil=Date.now()+18000; _skySig="";
+  const b=BLD.find(x=>x.id===id);
+  toast("⚖️ 間引き："+(b?b.name:"建物")+"を畳み、荒廃を抑えた");
+  if(typeof beep==="function") beep(330,0.16,"triangle",0.09);
+  save(); render();
+}
 function renderUpkeep(){
   const box=$("#upkeep"); if(!box) return;
   const d=Math.round(S.decay||0), good=100-d;
@@ -1541,6 +1719,88 @@ function renderUpkeep(){
   box.classList.toggle("danger", d>=75);
   $("#upPct").textContent = d<25?"良好" : d<50?"やや荒れ" : d<75?"荒れ気味" : "危険！朽ちかけ";
   renderMeasures();
+}
+const ALLOC_JOBS=[
+  {id:"wood",  em:"🪵", name:"木こり", res:"wood"},
+  {id:"food",  em:"🌾", name:"畑",     res:"food"},
+  {id:"stone", em:"⛏️", name:"採石",   res:"stone"},
+  {id:"tend",  em:"🛠️", name:"手入れ", res:null}
+];
+function renderAuto(){
+  const el=$("#autoCtl"); if(!el) return;
+  const lv=S.autoLv||0;
+  if(lv<1){
+    const c=autoCost();
+    el.innerHTML=`<button class="auto-buy ${canAfford(c)?'':'locked'}" id="autoBuy">🏛 自治を始める<span class="ac">${costStr(c)}・新しい村人を自動配置</span></button>`;
+    const b=el.querySelector('#autoBuy'); if(b) b.onclick=buyAuto;
+  } else {
+    const max=lv>=3;
+    const up = max ? `<span class="auto-max">練度MAX</span>` : `<button class="auto-up ${canAfford(autoCost())?'':'locked'}" id="autoUp">練度↑ ${costStr(autoCost())}</button>`;
+    el.innerHTML=`<div class="auto-row">
+      <button class="auto-tog ${S.autoOn?'on':''}" id="autoTog">自治 ${S.autoOn?'ON':'OFF'}</button>
+      <span class="auto-lv">🏛 ${AUTO_NAMES[lv]}<small>練度${lv}</small></span>
+      ${up}</div>`;
+    const t=el.querySelector('#autoTog'); if(t) t.onclick=()=>{ S.autoOn=!S.autoOn; save(); render(); };
+    const u=el.querySelector('#autoUp'); if(u) u.onclick=buyAuto;
+  }
+}
+function renderAlloc(){
+  renderAuto();
+  const el=$("#alloc"); if(!el) return;
+  const fr=freeVillagers(), r=rates();
+  if($("#popN")) $("#popN").textContent=S.pop||0;
+  if($("#popFree")) $("#popFree").textContent=fr;
+  if($("#growthFill")) $("#growthFill").style.width=Math.min(100,(S.grow||0)/growthCost()*100)+"%";
+  el.innerHTML=ALLOC_JOBS.map(j=>{
+    const n=(S.assign&&S.assign[j.id])||0; let out;
+    if(j.res){ const nm=j.res==='wood'?'木':j.res==='food'?'食料':'石'; out=`+${(r[j.res]||0).toFixed(1)} ${nm}/秒`; }
+    else { const req=requiredTend(); out= n>=req? `荒廃を抑えてる（必要 ${req}人）` : `<span style="color:#ff9a6a">荒廃が進む（必要 ${req}人）</span>`; }
+    return `<div class="ajob">
+      <div class="aem">${j.em}</div>
+      <div class="ainfo"><div class="aname">${j.name}</div><div class="aout">${out}</div><div class="appl">${'👤'.repeat(Math.min(n,14))||'<span style="opacity:.3">―</span>'}</div></div>
+      <div class="astep"><button data-d="-1" data-j="${j.id}" ${n<=0?'disabled':''}>−</button><span class="acnt">${n}</span><button data-d="1" data-j="${j.id}" ${fr<=0?'disabled':''}>＋</button></div>
+    </div>`;
+  }).join("");
+  el.querySelectorAll("button[data-j]").forEach(b=>b.onclick=()=>allocAssign(b.dataset.j,+b.dataset.d));
+}
+function allocAssign(id,d){
+  if(!S.assign) S.assign={wood:0,food:0,stone:0,tend:0};
+  if(d>0){ if(freeVillagers()<=0) return; S.assign[id]=(S.assign[id]||0)+1; }
+  else { if((S.assign[id]||0)<=0) return; S.assign[id]--; }
+  if(typeof beep==="function") beep(d>0?520:360,0.05,"sine",0.06);
+  save(); render();
+}
+/* ===== 自治（配置の自動化・練度で賢くなる） ===== */
+const AUTO_NAMES=["","村長","評議会","官僚制"];
+function autoCost(){ const lv=S.autoLv||0; const p=Math.pow(2.2,lv); return {wood:Math.ceil(70*p), stone:Math.ceil(45*p)}; }
+function buyAuto(){
+  const c=autoCost(); if(!canAfford(c)){ toast("資源が足りない"); return; }
+  for(const k in c) S.res[k]-=c[k]; S.autoLv=(S.autoLv||0)+1; S.autoOn=true;
+  toast("🏛 自治：練度"+S.autoLv+"（"+AUTO_NAMES[S.autoLv]+"）に");
+  if(typeof beep==="function") beep(560,0.12,"triangle",0.1);
+  save(); render();
+}
+function autoAssign(){ // tickから呼ぶ：空いた村人＋手入れの安全だけ自動で捌く
+  if(!S.autoOn || (S.autoLv||0)<1) return;
+  const a=S.assign, lv=S.autoLv, N=S.pop||0;
+  const target=Math.ceil(N*0.45/1.45);   // 全体に対する適正な手入れ人数（配置後も安全）
+  // 1) 手入れを目標まで（まず空きから）
+  while((a.tend||0)<target && freeVillagers()>0) a.tend=(a.tend||0)+1;
+  // 2) 評議会以上：空きが無くても手入れ不足なら最大の生産者から回す
+  if(lv>=2){ let g=60;
+    while((a.tend||0)<target && producers()>0 && g-->0){
+      const big=['wood','food','stone'].reduce((m,k)=>(a[k]||0)>(a[m]||0)?k:m,'wood');
+      if((a[big]||0)<=0) break; a[big]--; a.tend=(a.tend||0)+1;
+    }
+  }
+  // 3) 評議会以上：手入れが過剰なら生産へ戻す
+  if(lv>=2){ let g=60; while((a.tend||0)>target+1 && g-->0) a.tend--; }
+  // 4) 余った村人を配分（Lv1=畑で成長 / Lv2+=在庫の少ない資源へ）
+  let g=60;
+  while(freeVillagers()>0 && g-->0){
+    const res = lv>=2 ? ['wood','food','stone'].reduce((m,k)=>((S.res[k]||0)<(S.res[m]||0)?k:m),'wood') : 'food';
+    a[res]=(a[res]||0)+1;
+  }
 }
 function costStr(c){ return Object.keys(c).map(k=>{const res=RES.find(x=>x.id===k);return res.ic+fmt(c[k]);}).join(" "); }
 function renderMeasures(){
@@ -1556,23 +1816,40 @@ function renderMeasures(){
   if(rallyActive()) rallyBtn=`<button class="ms active"><b>🎏 号令中</b><small>あと${Math.ceil((rallyUntil-now)/1000)}秒</small></button>`;
   else if(now<rallyCdUntil) rallyBtn=`<button class="ms locked"><b>🎏 号令</b><small>あと${Math.ceil((rallyCdUntil-now)/1000)}秒</small></button>`;
   else rallyBtn=`<button class="ms" data-m="rally"><b>🎏 号令</b><small>荒廃停止・倍速手入れ</small></button>`;
-  // 補修班
+  // 補修班（荒廃の進みを遅く）
   const mc=masonsCost();
   const masonsBtn=`<button class="ms ${canAfford(mc)?'':'locked'}" data-m="masons"><b>🧱 補修班 Lv.${S.masons||0}</b><small>${costStr(mc)}・荒廃-22%</small></button>`;
-  el.innerHTML=repairBtn+rallyBtn+masonsBtn;
-  el.querySelectorAll("button[data-m]").forEach(b=>b.onclick=()=>{ const m=b.dataset.m; if(m==='repair')doRepair(); else if(m==='rally')doRally(); else buyMasons(); });
+  // 見張り（放置中も自動手入れ）
+  const wc=watchCost();
+  const watchBtn=`<button class="ms ${canAfford(wc)?'':'locked'}" data-m="watch"><b>🔔 見張り Lv.${S.watch||0}</b><small>${costStr(wc)}・自動手入れ</small></button>`;
+  // 間引き（建物を畳んで荒廃を下げる）
+  const cCd=Math.ceil((consolidateCdUntil-now)/1000);
+  const consBtn = cCd>0
+    ? `<button class="ms locked"><b>⚖️ 間引き</b><small>あと${cCd}秒</small></button>`
+    : `<button class="ms" data-m="cons"><b>⚖️ 間引き</b><small>建物-1で荒廃-40</small></button>`;
+  el.innerHTML=repairBtn+rallyBtn+masonsBtn+watchBtn+consBtn;
+  el.querySelectorAll("button[data-m]").forEach(b=>b.onclick=()=>{ const m=b.dataset.m;
+    if(m==='repair')doRepair(); else if(m==='rally')doRally(); else if(m==='masons')buyMasons(); else if(m==='watch')buyWatch(); else if(m==='cons')doConsolidate(); });
 }
 function updateDecayVeil(){
   const v=$("#decayVeil"); if(v) v.style.opacity=((S.decay||0)/100*0.9).toFixed(2);
 }
 
 /* ===== ループ ===== */
+function growthCost(){ return Math.ceil(18 + (S.pop||6)*(S.pop||6)*1.4); }
 function tick(){
-  // 荒廃が時間で進む（大きい文明ほど速い）
-  S.decay=Math.min(100,(S.decay||0)+decayRate());
+  // 荒廃：生産で進み、手入れ配分＋見張りで戻る
+  S.decay=Math.max(0,Math.min(100,(S.decay||0)+decayRate()));
   if(S.decay>=100) crumble();
   const r=rates();
   for(const k in r){ S.res[k]=(S.res[k]||0)+r[k]; S.lifetime+=r[k]; }
+  // 人口成長：食料が満ちると村人が増える（家の上限まで）
+  S.grow=(S.grow||0)+(S.assign&&S.assign.food||0)*0.5+0.3;
+  if(S.grow>=growthCost() && S.res.food>=growthCost()*0.5 && (S.pop||0)<popCap()){
+    S.res.food-=growthCost()*0.5; S.grow=0; S.pop=(S.pop||0)+1; _vSig=-1;
+    if(!(S.autoOn&&S.autoLv>=1)) toast("👶 村人が増えた（"+S.pop+"人）。どこに置く?");
+  }
+  autoAssign(); // 自治ONなら空き村人を自動配置
   checkMilestones();
   // ワンダー完成チェック
   const w=checkWonderComplete();
@@ -1948,12 +2225,82 @@ const BeatPrint=(function(){
   return { open };
 })();
 
+/* ===== 蒸気機関（圧力調整ビート） ===== */
+const BeatSteam=(function(){
+  const q=s=>document.querySelector(s);
+  const RISE=0.95, VENT=7, TARGET=100, LO=40, HI=75;
+  let pressure, power, isOpen, onDone, timer, done2;
+  function open(done){ onDone=done; isOpen=true; pressure=45; power=0; done2=false;
+    q("#b5Win").classList.remove("show"); q("#b5Tell").style.opacity=""; q("#b5Cue").style.display="";
+    q("#b5Tell").innerHTML='ボイラーに火が入った。<br>蒸気を<b>逃がしすぎず・溜めすぎず</b>、緑の帯で出力を生め。';
+    q("#b5Power").innerHTML='出力 <b>0</b> / '+TARGET; paint();
+    q("#beat5").classList.add("show"); clearInterval(timer); timer=setInterval(tick,55);
+  }
+  function tick(){ if(!isOpen||done2) return;
+    pressure=Math.min(100,pressure+RISE);
+    if(pressure>=LO && pressure<=HI){ power=Math.min(TARGET,power+0.9); q("#b5Power").innerHTML='出力 <b>'+Math.floor(power)+'</b> / '+TARGET; if(power>=TARGET){ win(); return; } }
+    if(pressure>=100) blow();
+    paint();
+  }
+  function vent(){ if(!isOpen||done2) return; pressure=Math.max(0,pressure-VENT); paint(); if(typeof beep==="function") beep(320,0.05,"sine",0.06); }
+  function blow(){ power=Math.max(0,power-18); pressure=44; const s=q("#beat5"); s.classList.remove("blow"); void s.offsetWidth; s.classList.add("blow");
+    q("#b5Tell").innerHTML='<b style="color:#ff6a4a">暴発！</b> 溜めすぎだ、逃がせ。'; if(typeof beep==="function") beep(90,0.26,"sawtooth",0.1); }
+  function paint(){ const f=q("#b5Fill"); if(!f) return; f.style.width=pressure+"%"; f.classList.toggle("red",pressure>HI); }
+  function win(){ done2=true; clearInterval(timer); q("#b5Cue").style.display="none"; q("#b5Tell").style.opacity="0";
+    if(typeof sndFanfare==="function") sndFanfare(); if(typeof vibe==="function") vibe([0,80,40,80,40,120]);
+    setTimeout(()=>q("#b5Win").classList.add("show"),700); }
+  function close(){ isOpen=false; clearInterval(timer); q("#beat5").classList.remove("show"); q("#b5Tell").style.opacity=""; const d=onDone; onDone=null; if(d) d(); }
+  q("#beat5").addEventListener("pointerdown",()=>{ if(isOpen) vent(); });
+  window.addEventListener("keydown",e=>{ if(!isOpen||e.repeat) return; if(e.key===" "||e.key==="Enter"){ e.preventDefault(); vent(); } });
+  q("#b5Next").addEventListener("click",close);
+  return { open };
+})();
+
+/* ===== 世界をつなぐ網（接続ビート） ===== */
+const BeatNet=(function(){
+  const q=s=>document.querySelector(s);
+  const TARGET=12; let count, isOpen, onDone, spawnTimer, done2, lastPos;
+  function open(done){ onDone=done; isOpen=true; count=0; done2=false; lastPos=null;
+    q("#b6Win").classList.remove("show"); q("#b6Tell").style.opacity="";
+    q("#b6Field").innerHTML='<svg id="b6Lines"></svg>';
+    q("#b6Tell").innerHTML='世界を、一本の網でつなぐ。<br>光る点を<b>素早く</b>つなげ。';
+    q("#b6Count").innerHTML='接続 <b>0</b> / '+TARGET;
+    q("#beat6").classList.add("show"); clearInterval(spawnTimer); spawnTimer=setInterval(spawn,820); spawn();
+  }
+  function spawn(){ if(!isOpen||done2) return;
+    const field=q("#b6Field"); if(!field) return;
+    const x=12+Math.random()*76, y=10+Math.random()*80;
+    const n=document.createElement("div"); n.className="b6-node"; n.style.left=x+"%"; n.style.top=y+"%";
+    n.addEventListener("pointerdown",ev=>{ ev.stopPropagation(); hit(n,x,y); });
+    field.appendChild(n); setTimeout(()=>{ if(n.parentNode && !n.classList.contains("hit")) n.remove(); },1600);
+  }
+  function hit(n,x,y){ if(done2||n.classList.contains("hit")) return;
+    n.classList.add("hit"); setTimeout(()=>n.remove(),400);
+    if(typeof beep==="function") beep(560+count*28,0.08,"sine",0.08);
+    if(lastPos) line(lastPos.x,lastPos.y,x,y); lastPos={x,y};
+    count++; q("#b6Count").innerHTML='接続 <b>'+count+'</b> / '+TARGET;
+    if(count>=TARGET) win();
+  }
+  function line(x1,y1,x2,y2){ const svg=q("#b6Lines"); if(!svg) return;
+    const l=document.createElementNS("http://www.w3.org/2000/svg","line");
+    l.setAttribute("x1",x1+"%"); l.setAttribute("y1",y1+"%"); l.setAttribute("x2",x2+"%"); l.setAttribute("y2",y2+"%");
+    l.setAttribute("stroke","rgba(140,200,255,.55)"); l.setAttribute("stroke-width","2"); svg.appendChild(l); }
+  function win(){ done2=true; clearInterval(spawnTimer); q("#b6Tell").style.opacity="0";
+    if(typeof sndFanfare==="function") sndFanfare(); if(typeof vibe==="function") vibe([0,80,40,80,40,120]);
+    setTimeout(()=>q("#b6Win").classList.add("show"),700); }
+  function close(){ isOpen=false; clearInterval(spawnTimer); q("#beat6").classList.remove("show"); q("#b6Tell").style.opacity=""; lastPos=null; const d=onDone; onDone=null; if(d) d(); }
+  q("#b6Next").addEventListener("click",close);
+  return { open };
+})();
+
 // この時代へ進化した瞬間に発火するビート（age index → id）
-function ageBeatId(age){ return age===1?'writing' : age===2?'plague' : age===3?'printing' : null; }
+function ageBeatId(age){ return age===1?'writing' : age===2?'plague' : age===3?'printing' : age===4?'steam' : age===5?'network' : null; }
 function openAgeBeat(id, done){
   if(id==='writing') BeatWrite.open(done);
   else if(id==='plague') BeatChoice.open(done);
   else if(id==='printing') BeatPrint.open(done);
+  else if(id==='steam') BeatSteam.open(done);
+  else if(id==='network') BeatNet.open(done);
   else done && done();
 }
 
@@ -1963,6 +2310,8 @@ function maybeOpeningBeat(){
   if(S.age>1 && !S.discoveries.includes('writing')) S.discoveries.push('writing');
   if(S.age>2 && !S.discoveries.includes('plague')) S.discoveries.push('plague');
   if(S.age>3 && !S.discoveries.includes('printing')) S.discoveries.push('printing');
+  if(S.age>=4 && !S.discoveries.includes('steam')) S.discoveries.push('steam');
+  if(S.age>=5 && !S.discoveries.includes('network')) S.discoveries.push('network');
   // 真新しい始まりだけ、火のビートを開く
   if(!S.discoveries.includes('fire')){
     Beat.open('fire', ()=>{ if(!S.discoveries.includes('fire')) S.discoveries.push('fire'); save(); cloudSave(true); render(); });
@@ -1984,7 +2333,6 @@ function start(){
   initCloud();
   setInterval(()=>cloudSave(false), 20000);
   if(pendingWonder){ const w=pendingWonder; pendingWonder=null; setTimeout(()=>celebrateWonder(w),700); }
-  $("#scene").addEventListener("pointerdown", gatherTap);
   setInterval(tick,1000);
   setInterval(save,5000);
   window.addEventListener("beforeunload",save);

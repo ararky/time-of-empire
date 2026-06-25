@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Time of Empire — 村人の采配（試作）</title>
+<style>
+  :root{ --ink:#f4ead5; --dim:#b9a98a; --gold:#e0b54a; --pos:#9fcf7a; --line:rgba(224,181,74,.22); }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0;
+    touch-action:manipulation; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
+  body{font-family:-apple-system,"Hiragino Sans",sans-serif; color:var(--ink);
+    background:radial-gradient(120% 80% at 50% -10%, rgba(201,123,60,.16), transparent 60%), #0e0b08;
+    min-height:100vh; -webkit-font-smoothing:antialiased; display:flex; justify-content:center;}
+  .mincho{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;}
+  #app{width:100%; max-width:480px; padding:18px 16px 40px;}
+  h1{font-size:14px; letter-spacing:.3em; color:var(--dim); text-align:center; font-weight:700; margin-bottom:4px;}
+  .sub{font-size:11px; color:var(--dim); text-align:center; opacity:.7; margin-bottom:16px;}
+
+  /* 人口 */
+  #pop{text-align:center; margin-bottom:12px;}
+  #pop .n{font-size:26px; font-weight:900; color:#fff;}
+  #pop .lbl{font-size:11px; color:var(--dim); letter-spacing:.06em;}
+  #pop .free{color:var(--gold); font-weight:800;}
+  #growth{height:5px; border-radius:4px; background:rgba(255,255,255,.07); overflow:hidden; margin:8px auto 0; max-width:240px;}
+  #growth > div{height:100%; width:0%; background:linear-gradient(90deg,#7fae5a,#bcd84a); transition:width .3s;}
+
+  /* 資源HUD */
+  #res{display:flex; border-radius:14px; overflow:hidden; border:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(46,34,18,.9),rgba(20,15,9,.95)); box-shadow:0 4px 0 rgba(0,0,0,.4); margin-bottom:12px;}
+  .r{flex:1; display:flex; align-items:center; justify-content:center; gap:7px; padding:10px 2px; border-right:1px solid rgba(224,181,74,.14);}
+  .r:last-child{border:none;} .r .ic{font-size:22px;} .r .v{font-size:17px; font-weight:900; color:#fff;}
+  .r .rate{font-size:9.5px; color:var(--pos); font-weight:800;}
+
+  /* 手入れメーター */
+  #upk{margin-bottom:14px;}
+  .uh{display:flex; justify-content:space-between; font-size:11px; font-weight:800; margin-bottom:5px;}
+  #uState{color:var(--pos);}
+  #ubar{height:9px; border-radius:6px; background:rgba(255,255,255,.07); border:1px solid var(--line); overflow:hidden;}
+  #ufill{height:100%; width:100%; background:linear-gradient(90deg,#5e8f44,#9fcf7a); transition:width .3s, background .4s;}
+  #upk.warn #ufill{background:linear-gradient(90deg,#c08a2a,#f5c14a);} #upk.warn #uState{color:#f5c14a;}
+  #upk.bad #ufill{background:linear-gradient(90deg,#b83a22,#ff6a4a);} #upk.bad #uState{color:#ff7a5a;}
+  #need{font-size:10px; color:var(--dim); margin-top:5px; opacity:.85;}
+
+  /* 仕事カード */
+  .jobs{display:flex; flex-direction:column; gap:10px;}
+  .job{display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:14px;
+    background:linear-gradient(180deg,rgba(50,40,24,.5),rgba(28,21,12,.6)); border:1px solid var(--line); box-shadow:0 3px 0 rgba(0,0,0,.3);}
+  .job .jem{font-size:28px; width:40px; height:40px; line-height:40px; text-align:center; flex-shrink:0;
+    background:radial-gradient(circle at 50% 40%, rgba(224,181,74,.16), rgba(0,0,0,.15)); border-radius:11px; border:1px solid rgba(224,181,74,.18);}
+  .job .jinfo{flex:1; min-width:0;}
+  .job .jname{font-weight:900; font-size:15px; color:#fff;}
+  .job .jout{font-size:11px; color:var(--gold); font-weight:700; margin-top:1px;}
+  .job .jppl{margin-top:5px; height:13px; line-height:13px; letter-spacing:1px; font-size:13px; color:#cbb88a; overflow:hidden; white-space:nowrap;}
+  .stepper{display:flex; align-items:center; gap:8px; flex-shrink:0;}
+  .stepper button{width:36px; height:36px; border:none; border-radius:10px; font-size:20px; font-weight:900; font-family:inherit;
+    color:#3a2810; background:linear-gradient(180deg,#ffe27e,#e6b53e); box-shadow:0 3px 0 #a8761c; cursor:pointer;}
+  .stepper button:active{transform:translateY(2px); box-shadow:0 1px 0 #a8761c;}
+  .stepper button:disabled{background:rgba(255,255,255,.05); color:var(--dim); box-shadow:none; cursor:not-allowed;}
+  .stepper .cnt{min-width:24px; text-align:center; font-size:20px; font-weight:900; color:#fff;}
+
+  .note{font-size:11px; color:var(--dim); text-align:center; margin-top:16px; line-height:1.7; opacity:.85;}
+  .toast{position:fixed; top:14px; left:50%; transform:translateX(-50%) translateY(-160%); background:rgba(18,13,8,.94);
+    border:1px solid rgba(224,181,74,.4); color:var(--ink); padding:10px 18px; border-radius:30px; font-size:13px; font-weight:700;
+    transition:transform .5s cubic-bezier(.2,1.4,.4,1); z-index:30;}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>村人の采配</h1>
+  <div class="sub mincho">連打ではなく、人をどこに置くかで文明は決まる</div>
+
+  <div id="pop">
+    <span class="n" id="popN">0</span><span class="lbl"> 人　空き <span class="free" id="popFree">0</span></span>
+    <div id="growth"><div id="growthFill"></div></div>
+    <div class="lbl" style="margin-top:4px; font-size:10px;">食料が満ちると、村人が増える</div>
+  </div>
+
+  <div id="res"></div>
+
+  <div id="upk">
+    <div class="uh"><span>🛠 手入れ</span><span id="uState">良好</span></div>
+    <div id="ubar"><div id="ufill"></div></div>
+    <div id="need"></div>
+  </div>
+
+  <div class="jobs" id="jobs"></div>
+
+  <div class="note">人手は有限。生産に回せば荒廃が進み、手入れに回せば生産が減る。<br>「どこに置くか」を決め続けるのがこのゲーム。</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const JOBS=[
+  {id:"wood",  em:"🪵", name:"木こり", res:"wood",  rate:0.55, kind:"prod"},
+  {id:"food",  em:"🌾", name:"畑",     res:"food",  rate:0.7,  kind:"prod"},
+  {id:"stone", em:"⛏️", name:"採石",   res:"stone", rate:0.4,  kind:"prod"},
+  {id:"tend",  em:"🛠️", name:"手入れ", res:null,    rate:0,    kind:"tend"}
+];
+let S={ pop:6, assign:{wood:2,food:3,stone:0,tend:1}, res:{wood:0,food:0,stone:0}, decay:0, grow:0 };
+
+const assigned=()=>JOBS.reduce((a,j)=>a+(S.assign[j.id]||0),0);
+const free=()=>S.pop-assigned();
+const producers=()=>(S.assign.wood||0)+(S.assign.food||0)+(S.assign.stone||0);
+const requiredTend=()=>Math.ceil(producers()*0.45);            // 生産が多いほど手入れが要る
+const decayPenalty=()=>1 - S.decay/100*0.7;                     // 荒廃で生産が落ちる
+const growthCost=()=>Math.ceil(14 + S.pop*S.pop*1.6);          // 人が増えるほど次が重い
+
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),2600); }
+
+function renderRes(){
+  $("#res").innerHTML=[["wood","🪵"],["food","🍖"],["stone","🪨"]].map(([k,ic])=>{
+    const j=JOBS.find(x=>x.res===k); const rate=(S.assign[j.id]||0)*j.rate*decayPenalty();
+    return `<div class="r"><span class="ic">${ic}</span><span style="display:flex;flex-direction:column;line-height:1.1"><span class="v">${Math.floor(S.res[k])}</span><span class="rate">+${rate.toFixed(1)}/秒</span></span></div>`;
+  }).join("");
+}
+function ppl(n){ return "👤".repeat(Math.min(n,12)); }
+function renderJobs(){
+  $("#jobs").innerHTML=JOBS.map(j=>{
+    const n=S.assign[j.id]||0;
+    let out;
+    if(j.kind==="prod"){ out=`+${(n*j.rate*decayPenalty()).toFixed(1)} ${j.res==='wood'?'木':j.res==='food'?'食料':'石'}/秒`; }
+    else { const req=requiredTend(); out=`荒廃 ${n>=req?'を抑えてる':'が進む'}（必要 ${req}人）`; }
+    return `<div class="job">
+      <div class="jem">${j.em}</div>
+      <div class="jinfo"><div class="jname">${j.name}</div><div class="jout">${out}</div><div class="jppl">${ppl(n)||'<span style="opacity:.3">―</span>'}</div></div>
+      <div class="stepper">
+        <button data-d="-1" data-j="${j.id}" ${n<=0?'disabled':''}>−</button>
+        <span class="cnt">${n}</span>
+        <button data-d="1" data-j="${j.id}" ${free()<=0?'disabled':''}>＋</button>
+      </div>
+    </div>`;
+  }).join("");
+  $("#jobs").querySelectorAll("button[data-j]").forEach(b=>b.onclick=()=>assign(b.dataset.j,+b.dataset.d));
+}
+function renderTop(){
+  $("#popN").textContent=S.pop; $("#popFree").textContent=free();
+  $("#growthFill").style.width=Math.min(100,S.grow/growthCost()*100)+"%";
+  const d=Math.round(S.decay), good=100-d;
+  $("#ufill").style.width=good+"%";
+  const box=$("#upk"); box.classList.toggle("warn", d>=40&&d<72); box.classList.toggle("bad", d>=72);
+  $("#uState").textContent = d<22?"良好" : d<48?"やや荒れ" : d<72?"荒れ気味" : "危険！";
+  const req=requiredTend(), have=S.assign.tend||0;
+  $("#need").textContent = have>=req ? `手入れ ${have}人で足りている（生産 ${producers()}人）`
+    : `⚠️ 手入れが ${req-have}人 足りない → 荒れていく`;
+}
+function render(){ renderRes(); renderJobs(); renderTop(); }
+
+function assign(id,d){
+  if(d>0){ if(free()<=0) return; S.assign[id]=(S.assign[id]||0)+1; }
+  else { if((S.assign[id]||0)<=0) return; S.assign[id]--; }
+  render();
+}
+
+function tick(){
+  const pen=decayPenalty();
+  // 生産
+  for(const j of JOBS){ if(j.kind==="prod"){ S.res[j.res]+=(S.assign[j.id]||0)*j.rate*pen; } }
+  // 荒廃：生産で進み、手入れで戻る
+  const rise=producers()*0.5, fall=(S.assign.tend||0)*1.15;
+  S.decay=Math.max(0,Math.min(100,S.decay+rise-fall));
+  // 人口成長：食料が満ちると村人が増える
+  S.grow+=(S.assign.food||0)*0.5 + 0.3;
+  if(S.grow>=growthCost() && S.res.food>=growthCost()*0.5){
+    S.res.food-=growthCost()*0.5; S.grow=0; S.pop++;
+    toast("👶 村人が増えた（"+S.pop+"人）。どこに置く?");
+  }
+  render();
+}
+render();
+setInterval(tick,1000);
+</script>
+</body>
+</html>
