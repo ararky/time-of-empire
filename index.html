@@ -3,85 +3,180 @@
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-store">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>てのひらの、千五百年</title>
 <style>
-  :root{ --paper:#f2e9d6; --ink:#2a241c; --sub:#7a6f5a; --gold:#b08d3e; --indigo:#1a2740; }
+  :root{
+    --paper:#f2e9d6; --ink:#2a241c; --sub:#7a6f5a; --gold:#b08d3e; --indigo:#1a2740;
+    --ac:#b08d3e;                 /* 時代のアクセント（JSで切替） */
+    --line:rgba(120,100,60,.22);
+  }
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
   html,body{height:100%; overflow:hidden;}
   body{font-family:"Hiragino Mincho ProN","Yu Mincho",YuMincho,serif; background:#0d0f14;
     -webkit-font-smoothing:antialiased; color:var(--ink);}
+  .screen{position:fixed; inset:0; display:none;}
+  .screen.show{display:block;}
+  button{font-family:inherit; cursor:pointer;}
 
-  /* ===== 表紙（藍・金） ===== */
-  #cover{position:fixed; inset:0; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  /* ===================== 表紙 ===================== */
+  #cover{z-index:30; flex-direction:column; align-items:center; justify-content:center;
     padding:40px 30px; text-align:center; color:#e9dfc4;
     background:
       radial-gradient(120% 80% at 50% 12%, rgba(176,141,62,.18), transparent 60%),
       linear-gradient(180deg,#1c2b48, #131d33 70%, #0f1728);}
+  #cover.show{display:flex;}
   #cover .frame{border:1px solid rgba(176,141,62,.5); border-radius:2px; padding:44px 26px; max-width:340px; width:100%;
     box-shadow:0 0 60px rgba(0,0,0,.5) inset;}
-  #cover .kicker{font-size:11px; letter-spacing:.5em; text-indent:.5em; color:var(--gold); margin-bottom:30px;}
+  #cover .kicker{font-size:11px; letter-spacing:.5em; text-indent:.5em; color:var(--gold); margin-bottom:26px;}
   #cover h1{font-size:34px; font-weight:500; letter-spacing:.14em; line-height:1.5; color:#f2e6c8;
     text-shadow:0 2px 20px rgba(0,0,0,.5);}
-  #cover .sub{font-size:12.5px; color:#c9bd9c; letter-spacing:.08em; line-height:1.9; margin-top:22px;}
-  #cover .line{width:44px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:26px auto;}
-  #cover .name-in{margin-top:6px;}
+  #cover .sub{font-size:12.5px; color:#c9bd9c; letter-spacing:.08em; line-height:1.9; margin-top:20px;}
+  #cover .days{font-size:11px; color:var(--gold); letter-spacing:.28em; margin-top:14px;}
+  #cover .line{width:44px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:24px auto;}
   #cover input{font-family:inherit; text-align:center; font-size:15px; color:#f2e6c8; background:rgba(255,255,255,.04);
     border:none; border-bottom:1px solid rgba(176,141,62,.5); padding:7px 6px; width:170px; letter-spacing:.1em;}
   #cover input::placeholder{color:#8a8069;} #cover input:focus{outline:none; border-color:var(--gold);}
   #cover .as{font-size:11px; color:var(--sub); margin-top:8px; letter-spacing:.1em;}
-  #cover .open{margin-top:34px; font-family:inherit; cursor:pointer; border:1px solid rgba(176,141,62,.6);
+  #cover .open{margin-top:32px; border:1px solid rgba(176,141,62,.6);
     background:rgba(176,141,62,.12); color:#f2e6c8; font-size:15px; letter-spacing:.3em; text-indent:.3em;
     padding:13px 30px; border-radius:2px; transition:background .2s;}
   #cover .open:active{background:rgba(176,141,62,.25);}
 
-  /* ===== 本文（縦書き・生成りの紙） ===== */
-  #book{position:fixed; inset:0; z-index:5; display:none; background:var(--paper);
-    background-image:radial-gradient(rgba(120,100,60,.05) 1px, transparent 1px); background-size:3px 3px;}
-  #book.show{display:block;}
-  #pages{position:absolute; inset:0; writing-mode:vertical-rl; -webkit-writing-mode:vertical-rl;
-    overflow-x:auto; overflow-y:hidden; padding:48px 40px 44px; -webkit-overflow-scrolling:touch;
-    font-size:22px; line-height:2.15; letter-spacing:.03em; color:var(--ink);}
-  #pages::-webkit-scrollbar{display:none;}
-  .ch{ display:inline-block; height:100%; }
-  /* 扉（章の見出し） */
-  .tobira{display:inline-flex; flex-direction:column; align-items:center; justify-content:center; height:100%;
-    padding:0 30px; margin-left:10px; border-left:1px solid rgba(120,100,60,.2);}
-  .tobira .no{font-size:15px; letter-spacing:.4em; color:var(--gold); margin-right:22px;}
-  .tobira .ttl{font-size:32px; letter-spacing:.24em; color:var(--ink); font-weight:500;}
-  .tobira .who{font-size:16px; color:var(--sub); letter-spacing:.14em; margin-left:20px;}
-  .body{display:inline-block; height:100%;}
-  .body p{margin-right:1.3em; text-indent:1em;}
-  .body p:first-child{text-indent:1em;}
-  .body .b{font-weight:500;}
-  .fin{display:inline-flex; align-items:center; justify-content:center; height:100%; padding:0 40px;
-    color:var(--sub); font-size:14px; letter-spacing:.4em;}
-  /* 序 */
-  .jo{display:inline-block; height:100%;}
-  .jo p{margin-right:1.4em; color:#4a4234;}
-  .jo .h{font-size:15px; letter-spacing:.4em; color:var(--gold); margin-right:2em;}
+  /* ===================== ホーム ===================== */
+  #home{z-index:20; background:var(--paper);
+    background-image:radial-gradient(rgba(120,100,60,.05) 1px, transparent 1px); background-size:3px 3px;
+    flex-direction:column;}
+  #home.show{display:flex;}
+  .h-top{display:flex; justify-content:space-between; align-items:center; padding:16px 20px 0; font-size:12px; color:var(--sub);}
+  .h-top .ttl{letter-spacing:.18em;}
+  .h-top button{border:none; background:none; color:var(--sub); font-size:12px; letter-spacing:.1em;}
+  .h-mid{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px 28px; text-align:center;}
+  .dedic{font-size:12.5px; color:var(--sub); letter-spacing:.12em; line-height:1.9; margin-bottom:30px;}
+  .dedic b{color:var(--ac); font-weight:600;}
+  .today-k{font-size:12px; letter-spacing:.5em; color:var(--ac); text-indent:.5em; margin-bottom:14px;}
+  .today-n{font-size:64px; font-weight:500; letter-spacing:.1em; color:var(--ink); line-height:1;}
+  .today-n .ji{font-size:24px; color:var(--sub); margin:0 .15em;}
+  .today-era{font-size:13px; color:var(--sub); letter-spacing:.24em; margin-top:20px;}
+  .today-ttl{font-size:26px; letter-spacing:.12em; color:var(--ink); margin-top:12px; font-weight:500;}
+  .today-tease{font-size:13.5px; color:#6a614e; line-height:2; margin-top:20px; max-width:300px;
+    max-height:5.5em; overflow:hidden;}
+  .open-day{margin-top:34px; border:1px solid var(--ac);
+    background:color-mix(in srgb, var(--ac) 12%, transparent); color:var(--ink);
+    font-size:15px; letter-spacing:.28em; text-indent:.28em; padding:14px 36px; border-radius:2px; transition:.15s;}
+  .open-day:active{background:color-mix(in srgb, var(--ac) 24%, transparent);}
+  .allread{font-size:13px; color:var(--sub); letter-spacing:.14em; line-height:2;}
+  .h-bot{padding:0 24px calc(20px + env(safe-area-inset-bottom));}
+  .prog-row{display:flex; align-items:center; gap:12px; font-size:11px; color:var(--sub); letter-spacing:.08em;}
+  .prog-bar{flex:1; height:2px; background:var(--line); border-radius:2px; overflow:hidden;}
+  .prog-bar i{display:block; height:100%; background:var(--ac); border-radius:2px; transition:width .6s ease;}
+  .h-links{display:flex; justify-content:center; gap:26px; margin-top:16px;}
+  .h-links button{border:none; background:none; color:var(--sub); font-size:12.5px; letter-spacing:.14em; padding:6px;}
 
-  /* 走り（上部の細い時代表示）＋戻る */
-  #head{position:fixed; top:0; left:0; right:0; z-index:6; display:none; justify-content:space-between; align-items:center;
-    padding:12px 16px calc(10px); pointer-events:none;}
-  #head.show{display:flex;}
-  #era{font-size:11px; letter-spacing:.28em; color:var(--sub);}
-  #back{pointer-events:auto; cursor:pointer; font-size:12px; color:var(--sub); letter-spacing:.1em; border:none; background:none; font-family:inherit;}
-  .hint{position:fixed; bottom:16px; left:0; right:0; text-align:center; font-size:10.5px; letter-spacing:.2em; color:var(--sub);
-    z-index:6; display:none; animation:bob 2.4s ease-in-out infinite; pointer-events:none;}
-  .hint.show{display:block;} @keyframes bob{0%,100%{opacity:.4; transform:translateX(6px)}50%{opacity:.9; transform:translateX(-2px)}}
+  /* ===================== 読書（頁めくり） ===================== */
+  #reader{z-index:25; background:var(--paper);
+    background-image:radial-gradient(rgba(120,100,60,.05) 1px, transparent 1px); background-size:3px 3px;}
+  #reader.show{display:block;}
+  #rbar{position:absolute; top:0; left:0; right:0; z-index:3; display:flex; justify-content:space-between; align-items:center;
+    padding:calc(12px + env(safe-area-inset-top)) 18px 10px; pointer-events:none;}
+  #rbar .era{font-size:11px; letter-spacing:.26em; color:var(--sub);}
+  #rbar .x{pointer-events:auto; border:none; background:none; color:var(--sub); font-size:12px; letter-spacing:.1em;}
+  #stage{position:absolute; top:0; left:0; right:0; bottom:0; overflow:hidden;}
+  #reel{position:absolute; top:0; right:0; bottom:0; padding:64px 34px 52px;
+    writing-mode:vertical-rl; -webkit-writing-mode:vertical-rl;
+    font-size:21px; line-height:2.2; letter-spacing:.03em; color:var(--ink);
+    transition:transform .42s cubic-bezier(.4,.0,.15,1);}
+  .etobira{display:inline-flex; flex-direction:column; align-items:center; justify-content:center; height:100%;
+    padding:0 26px; margin-left:8px; border-left:1px solid var(--line);}
+  .etobira .no{font-size:13px; letter-spacing:.4em; color:var(--ac); margin-right:20px;}
+  .etobira .ttl{font-size:30px; letter-spacing:.2em; color:var(--ink); font-weight:500; margin-right:8px;}
+  .etobira .who{font-size:13px; color:var(--sub); letter-spacing:.14em; margin-left:16px;}
+  .ebody{display:inline-block; height:100%;}
+  .ebody p{margin-right:1.35em; text-indent:1em;}
+  .ebody b{font-weight:600;}
+  /* タップゾーン */
+  .tap{position:absolute; top:0; bottom:0; width:38%; z-index:2;}
+  .tap.next{left:0;} .tap.prev{right:0;}
+  /* 頁インジケータ */
+  #rdots{position:absolute; left:0; right:0; bottom:calc(16px + env(safe-area-inset-bottom)); z-index:3;
+    display:flex; justify-content:center; gap:7px; pointer-events:none;}
+  #rdots i{width:5px; height:5px; border-radius:50%; background:var(--line); transition:.3s;}
+  #rdots i.on{background:var(--ac); transform:scale(1.25);}
+  .rhint{position:absolute; left:0; right:0; bottom:calc(34px + env(safe-area-inset-bottom)); z-index:3;
+    text-align:center; font-size:10.5px; letter-spacing:.2em; color:var(--sub); pointer-events:none;
+    animation:bob 2.6s ease-in-out infinite;}
+  @keyframes bob{0%,100%{opacity:.35; transform:translateX(6px)}50%{opacity:.85; transform:translateX(-2px)}}
+
+  /* 今日は、ここまで（余韻） */
+  #done{position:absolute; inset:0; z-index:5; display:none; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:40px 34px calc(40px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg, rgba(242,233,214,.86), var(--paper) 40%);
+    -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);}
+  #done.show{display:flex;}
+  #done .seal{font-size:12px; letter-spacing:.5em; color:var(--ac); text-indent:.5em; margin-bottom:22px;}
+  #done .kk{font-size:22px; letter-spacing:.16em; color:var(--ink); font-weight:500;}
+  #done .dtl{font-size:13px; color:var(--sub); letter-spacing:.14em; margin-top:16px; line-height:1.9;}
+  #done .line{width:40px; height:1px; background:linear-gradient(90deg,transparent,var(--ac),transparent); margin:26px auto;}
+  #done .nxt{font-size:13px; color:#6a614e; line-height:2; letter-spacing:.08em; max-width:280px;}
+  #done .nxt .lbl{font-size:11px; color:var(--sub); letter-spacing:.24em; display:block; margin-bottom:6px;}
+  #done .acts{display:flex; flex-direction:column; align-items:center; gap:14px; margin-top:30px;}
+  #done .go{border:1px solid var(--ac); background:color-mix(in srgb, var(--ac) 12%, transparent); color:var(--ink);
+    font-size:14px; letter-spacing:.22em; text-indent:.22em; padding:12px 30px; border-radius:2px;}
+  #done .go:active{background:color-mix(in srgb, var(--ac) 24%, transparent);}
+  #done .sub-links{display:flex; gap:24px;}
+  #done .sub-links button{border:none; background:none; color:var(--sub); font-size:12.5px; letter-spacing:.14em;}
+  #done .lock{font-size:12.5px; color:var(--sub); letter-spacing:.1em; line-height:2;}
+  #done .peek{border:none; background:none; color:var(--ac); font-size:12px; letter-spacing:.16em; opacity:.75; margin-top:4px;}
+
+  /* ===================== 目次（暦） ===================== */
+  #toc{z-index:22; background:var(--paper); overflow-y:auto; -webkit-overflow-scrolling:touch;
+    background-image:radial-gradient(rgba(120,100,60,.05) 1px, transparent 1px); background-size:3px 3px;}
+  #toc.show{display:block;}
+  .toc-top{position:sticky; top:0; display:flex; justify-content:space-between; align-items:center;
+    padding:calc(14px + env(safe-area-inset-top)) 20px 14px; background:linear-gradient(180deg,var(--paper),rgba(242,233,214,.85));
+    backdrop-filter:blur(3px); z-index:2;}
+  .toc-top .t{font-size:14px; letter-spacing:.2em; color:var(--ink);}
+  .toc-top button{border:none; background:none; color:var(--sub); font-size:12.5px; letter-spacing:.12em;}
+  .toc-inner{padding:6px 18px calc(50px + env(safe-area-inset-bottom)); max-width:520px; margin:0 auto;}
+  .era-block{margin-top:22px;}
+  .era-head{display:flex; align-items:baseline; gap:10px; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--line);}
+  .era-head .en{font-size:15px; letter-spacing:.18em; color:var(--ink);}
+  .era-head .ew{font-size:11px; color:var(--sub); letter-spacing:.1em;}
+  .era-head .ed{margin-left:auto; font-size:10.5px; color:var(--sub); letter-spacing:.1em;}
+  .cells{display:grid; grid-template-columns:repeat(auto-fill, minmax(0,1fr)); gap:8px;}
+  .cell{aspect-ratio:1/1; border:1px solid var(--line); border-radius:3px; display:flex; align-items:center; justify-content:center;
+    font-size:14px; color:var(--sub); position:relative; transition:.15s; background:rgba(255,255,255,.15);}
+  .cell.read{background:var(--eac); border-color:transparent; color:#fff;}
+  .cell.open{border-color:var(--eac); color:var(--ink);}
+  .cell.cur{box-shadow:0 0 0 2px var(--eac); font-weight:600; color:var(--ink);}
+  .cell.lock{opacity:.4; color:var(--sub);}
+  .cell.lock::after{content:""; position:absolute; inset:0;}
+  .cell:not(.lock){cursor:pointer;}
+  .cell:not(.lock):active{transform:scale(.93);}
+
+  /* 序を読む用オーバーレイ */
+  #jo{z-index:24; background:var(--paper); overflow-y:auto; -webkit-overflow-scrolling:touch;
+    background-image:radial-gradient(rgba(120,100,60,.05) 1px, transparent 1px); background-size:3px 3px;}
+  #jo.show{display:block;}
+  .jo-wrap{max-width:520px; margin:0 auto; padding:calc(60px + env(safe-area-inset-top)) 34px 60px;}
+  .jo-h{font-size:13px; letter-spacing:.5em; color:var(--ac); text-indent:.5em; text-align:center; margin-bottom:34px;}
+  .jo-wrap p{font-size:16px; line-height:2.4; color:#3a3327; margin-bottom:20px; text-indent:1em;}
+  .jo-wrap p.d{color:var(--ac); text-indent:0; font-size:14px; letter-spacing:.06em;}
+  .jo-close{display:block; margin:36px auto 0; border:1px solid var(--ac); background:none; color:var(--ink);
+    font-size:13px; letter-spacing:.24em; text-indent:.24em; padding:11px 30px; border-radius:2px;}
 </style>
 </head>
 <body>
 
-<!-- 表紙 -->
-<div id="cover">
+<!-- ========== 表紙 ========== -->
+<div id="cover" class="screen show">
   <div class="frame">
     <div class="kicker">Ａ　ＮＯＶＥＬ</div>
     <h1>てのひらの、<br>千五百年</h1>
     <div class="sub">古墳のむらから、令和の街まで<br>――名もなき者たちの物語</div>
+    <div class="days">全 九十日 ・ 一日に、一話</div>
     <div class="line"></div>
-    <div class="name-in">
+    <div style="margin-top:2px;">
       <input id="kamei" type="text" maxlength="8" placeholder="あなたの家名">
       <div class="as">――この一族の名を</div>
     </div>
@@ -89,162 +184,411 @@
   </div>
 </div>
 
-<!-- 本 -->
-<div id="head"><span id="era">序</span><button id="back">▹ 表紙へ</button></div>
-<div id="book"><div id="pages"></div></div>
-<div class="hint" id="hint">◃ 左へ、めくる</div>
+<!-- ========== ホーム ========== -->
+<div id="home" class="screen">
+  <div class="h-top">
+    <span class="ttl">てのひらの、千五百年</span>
+    <button id="toCover">表紙</button>
+  </div>
+  <div class="h-mid">
+    <div class="dedic" id="dedic"></div>
+    <div class="today-k">本日の一話</div>
+    <div class="today-n" id="todayN"></div>
+    <div class="today-era" id="todayEra"></div>
+    <div class="today-ttl" id="todayTtl"></div>
+    <div class="today-tease" id="todayTease"></div>
+    <button class="open-day" id="openToday">よ　む</button>
+  </div>
+  <div class="h-bot">
+    <div class="prog-row">
+      <span id="progTxt">0 / 90</span>
+      <span class="prog-bar"><i id="progFill"></i></span>
+      <span id="progPct">0%</span>
+    </div>
+    <div class="h-links">
+      <button id="toToc">目 次</button>
+      <button id="toJo">序 を よ む</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 読書 ========== -->
+<div id="reader" class="screen">
+  <div id="rbar"><span class="era" id="rEra"></span><button class="x" id="rClose">✕　もくじ</button></div>
+  <div id="stage">
+    <div id="reel"></div>
+  </div>
+  <div class="tap prev" id="tapPrev"></div>
+  <div class="tap next" id="tapNext"></div>
+  <div id="rdots"></div>
+  <div class="rhint" id="rhint">◃　タップで、めくる</div>
+  <div id="done">
+    <div class="seal">今日は、ここまで</div>
+    <div class="kk" id="doneTtl"></div>
+    <div class="dtl" id="doneDtl"></div>
+    <div class="line"></div>
+    <div class="nxt" id="doneNxt"></div>
+    <div class="acts" id="doneActs"></div>
+  </div>
+</div>
+
+<!-- ========== 目次 ========== -->
+<div id="toc" class="screen">
+  <div class="toc-top">
+    <span class="t">目　次　―　九十日</span>
+    <button id="tocClose">とじる</button>
+  </div>
+  <div class="toc-inner" id="tocInner"></div>
+</div>
+
+<!-- ========== 序 ========== -->
+<div id="jo" class="screen">
+  <div class="jo-wrap">
+    <div class="jo-h">序</div>
+    <div id="joBody"></div>
+    <button class="jo-close" id="joClose">本文へ</button>
+  </div>
+</div>
 
 <script>
 const $=s=>document.querySelector(s);
-let FAM='';
+const el=(t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e;};
+const DAY_MS=86400000;
 
+/* ============ 序文 ============ */
 const JO=[
   'これは、英雄の物語ではない。',
   '城を建てた者も、天下を取った者も、ここには出てこない。',
   '出てくるのは、その傍らで畑を耕し、子を産み、手を握り、名も残さず死んでいった――あなたの、遠い先祖たちだ。',
-  '千五百年。ひとつの手が、次の手を、握り続けた。その、記録である。',
+  '千五百年。ひとつの手が、次の手を、握り続けた。',
+  'それを、九十の夜に分けて、少しずつ、お読みください。',
 ];
 
-const CH=[
-  { no:'一', era:'古墳時代', ttl:'古墳時代', who:'河内のむら ・ ひな', p:[
-    '山が、できていく。',
-    '人の手で土を運び、突き固め、幾百の背が朝から晩まで動いて、王の眠る山が、日ごとに空へせり上がっていく。ひなは、母の背から、それを見ていた。',
-    '王の名は、知らない。ひなの一族が、なぜその土を運ぶのかも、知らない。ただ、父の掌(てのひら)が土で黒く割れていることと、その父が夜、囲炉裏のそばでひなの小さな手を握ると、割れた掌がひどく熱いことだけを、知っていた。',
-    '「大きな人が、死んだのだ」と母は言った。「わたしたちは、土を盛る」',
-    '王は山になり、名を残した。土を盛った者たちは、名を残さない。',
-    'けれど、握られた手の熱さは――ひなから、その子へ、その子の子へと、握られ続けていく。それだけが、この一族の、たったひとつの相続だった。',
-  ]},
-  { no:'二', era:'飛鳥時代', ttl:'飛 鳥', who:'飛鳥の里 ・ あすか', p:[
-    '金色(こんじき)の、人がいた。',
-    '海の向こうから来たという新しい仏(ほとけ)が、御方(おかた)の寺に、金色に光って坐(ざ)していた。あすかは、父の後ろから、それを見上げた。父は、その御堂(みどう)の柱を削った、幾人もの手のひとりだった。',
-    '「あれは、新しい神さまだ」と、里の者はひそひそ言った。「都の偉い方々が、どちらの神を敬うかで、争っておられる」',
-    'あすかには、どちらの神も、遠かった。ただ、金の光がまぶしくて、思わず父の手を握ると、木くずで荒れたその手が、握り返してきた。',
-    '神々が争い、都が移り、豪族の名が石碑に刻まれていく。柱を削った父の名は、どこにも残らない。',
-    'けれど、荒れた手の、その握り返しの強さだけを、あすかは覚えて帰った。',
-  ]},
-  { no:'三', era:'奈良時代', ttl:'奈 良', who:'東国の村 ・ たみ', p:[
-    '夫は、東(あづま)の果てへ、発(た)っていった。',
-    '防人(さきもり)、と役人は言った。遠い筑紫(つくし)の海を、名も知らぬ敵から守るのだと。なぜ、この村の男が、見たこともない海を守らねばならぬのか――たみには、わからなかった。',
-    '都では、途方もなく大きな仏(ほとけ)が、金と汗を集めて造られているという。その同じ国が、たみから、夫を取り上げた。',
-    '発つ朝、夫は、たみの手を、長いあいだ握っていた。言葉は、なかった。',
-    '夫は、帰らなかった。歌のひとつも、残さずに。',
-    'たみは、生まれた子の手を握って、夫がそうしたように、長く、黙って、握った。それが、たみに残された、たったひとつの、夫だった。',
-  ]},
-  { no:'四', era:'平安時代', ttl:'平安時代', who:'都 ・ 下女、あこ', p:[
-    '牛車(ぎっしゃ)が、通り過ぎていく。',
-    '簾(すだれ)の隙間から絹の色がこぼれ、香が漂い、笑い声が、あこの頭の上を越えていった。あこは道の端に膝をつき、泥に手をついて、それが過ぎるのを待つ。',
-    'あの中の姫君は、生涯、土に触れることがないのだという。あこの手は、洗い物と薪で、もう子どもの手ではなかった。',
-    '夜、下女部屋で、あこは熱を出した幼い妹の手を握った。硬く、荒れた、自分の手で。',
-    '都は千年の雅(みやび)を、書物に残す。あこの名は、どこにも書かれない。',
-    'ただ、握った手は、温かかった。それでいい、とあこは思った。',
-  ]},
-  { no:'五', era:'鎌倉時代', ttl:'鎌 倉', who:'西の浜辺の村 ・ まさ', p:[
-    '海の彼方に、見たこともない数の帆が、現れたという。',
-    '蒙古(もうこ)、と人は震えた。異国の兵が九州の浜に押し寄せ、火を噴く玉を投げるのだと、逃げてきた者が語った。まさの村は海から遠かったが、夜ごと、誰もが浜の方を見ては、手を合わせた。',
-    '嵐が来て、異国の船は沈んだ、と後になって聞いた。神風(かみかぜ)だ、と社(やしろ)の神主は誇った。武士たちは、恩賞を求めて鎌倉へ上っていった。',
-    'まさは、ただ、震える老いた母の手を、夜通し握っていた夜のことを、覚えている。神が吹かせたのか、運が良かったのか。それは、わからない。',
-    'わかるのは、あの夜、握った母の手が、氷のように冷たく、けれど、たしかに脈打っていたことだけだ。',
-  ]},
-  { no:'六', era:'室町時代', ttl:'室 町', who:'焼ける都 ・ きく', p:[
-    '都が、焼けていた。',
-    '十年、そのまた十年と、武士たちは都の中で争い続け、まちは幾度も焼けた。応仁(おうにん)の乱、と後の世は呼ぶ。きくの一家は焼け出され、荷を負って、東へ流れていく人の列に加わった。',
-    '「上(かみ)の争いだ」と、父は吐き捨てた。「わしらには、名も、理由(わけ)も、わからぬ」',
-    '流れる道の途中、幼い弟が、疲れて泣いた。きくは、その小さな手を握って、歩いた。焼けた都の煙を背に、名もなき人の列の中で、手だけを、離さずに。',
-    '乱はやがて全国へ広がり、世は、下剋上(げこくじょう)の戦国へ雪崩(なだれ)ていく。',
-    'その大きな流れの、ほんの一滴として、きくは弟の手を握り、生き延びた。ただ、それだけを。',
-  ]},
-  { no:'七', era:'戦国', ttl:'戦 国', who:'尾張 ・ むすめ、たね', p:[
-    '畑の向こうに土煙が上がったのは、稲刈りの前の日だった。',
-    '「織田さまの軍が、こっちへ来る」――物見に走った男が、息を切らして叫んだ。父は鍬を置き、たねの手を、痛いほど強く握った。',
-    'その日、たねの村は焼けなかった。軍は、ただ通り過ぎていった。名も知らぬ大きな戦の、ほんの端を、たねたちは息をひそめてやり過ごした。',
-    'その戦が、やがて世を統べ、天下を変えることを、たねは知らない。',
-    'ただ、稲は無事に実り、その秋も、家族は生きた。握られた手の、あの痛いほどの熱さだけを、たねは一生、覚えていた。',
-  ]},
-  { no:'八', era:'江戸時代', ttl:'江 戸', who:'長屋 ・ さと', p:[
-    '戦(いくさ)の音が、絶えて久しい。',
-    'さとが生まれてこのかた、田畑を焼く軍も、逃げ惑う夜も、なかった。祖母は「ありがたいことだ」と、何度も言った。祖母の、そのまた祖母の頃は、まだ、村が焼けた話が残っていたという。',
-    '大名(だいみょう)の行列が通る日は、みな道の端に平伏(ひれふ)した。顔を上げてはならぬ。さとは地面を見つめながら、隣の幼い妹の手を、そっと握っていた。誰にも見えぬように。',
-    '行列は、金と槍を連ねて過ぎていく。その大名の名を、さとは知らない。',
-    '夜、長屋の灯りの下で、母は繕(つくろ)いをし、父は湯屋(ゆや)の話をし、妹は膝で眠った。名もない、けれど、焼けない夜だった。',
-    '握った妹の手は、恐れではなく、ただ、温かかった。この温かさのために、幾百年、手は握られてきたのかもしれない――と、さとは、まだ知らずに、眠った。',
-  ]},
-  { no:'九', era:'明治時代', ttl:'明 治', who:'糸を繰る町 ・ ちよ', p:[
-    '汽車が、煙を吐いて、走っていた。',
-    '鉄の道が国じゅうに敷かれ、ちよは、その汽車に乗せられて、遠い町の工場(こうば)へ売られていった。糸を繰(く)る工女(こうじょ)、と呼ばれた。年季が明けるまで、村へは帰れない。',
-    '「お国のため、家(いえ)のためだ」と、村を出る朝、父は言った。文明開化(ぶんめいかいか)だと、富国強兵(ふこくきょうへい)だと、偉い人々は説いた。ちよには、糸と、機械の音と、眠れぬ夜だけが、現(うつつ)だった。',
-    '窓の外を、初めて見る電信柱(でんしんばしら)が、飛ぶように過ぎていく。ちよは、隣で泣く同い年の工女の手を、そっと握った。荒れて、糸で切れた、自分の手で。',
-    '国は、坂の上の雲を目指して、急いでいた。ちよの名は、その坂の、どこにも刻まれない。',
-    'ただ、握った手は、温かかった。それが、遠い村の、母の手に似ていた。',
-  ]},
-  { no:'十', era:'大正時代', ttl:'大 正', who:'燃える町 ・ はる', p:[
-    '地が、割れた。',
-    '昼どき、火を使う刻(とき)に、大地がうねり、家々が崩れ、そして、火が出た。町は燃えた。大正(たいしょう)の、あの大きな地震(なゐ)を、はるは、逃げ惑う人の波の中で迎えた。',
-    '新しい世だ、と町は言っていた。電灯が灯り、活動写真(かつどうしゃしん)が動き、女(おんな)も学びはじめた明るい世だと。その明るい町が、一日で、灰になった。',
-    '火の粉のなかを、はるは、はぐれかけた幼い子の手を、力いっぱい握って走った。もう片方の手は、老いた父を引いていた。両の手が、ふさがっていた。それでも、離さなかった。',
-    '幾万の名が、その日、失われた。多くは、名簿にも残らなかった。',
-    '生き延びて焼け跡に立ったとき、はるの両の掌(てのひら)には、握りしめた二つの手の熱が、まだ、残っていた。',
-  ]},
-  { no:'十一', era:'昭和 ・ 戦(いくさ)の世', ttl:'昭 和', who:'焼け跡の街 ・ 母、すゑ', p:[
-    '空が、燃えていた。',
-    '警報。走る足。すゑは、防空壕の暗がりで、四つになる娘の手を握りしめていた。頭の上を、地の底を、音が通り過ぎていく。娘は泣かなかった。ただ、母の手を、握り返していた。',
-    '新聞は遠い南の島の名を報じ、大本営は勝利を伝え続けた。すゑには、そのどれも、遠い言葉だった。すゑの世界は、この暗がりと、この小さな手の熱さが、すべてだった。',
-    '朝が来て、二人は、まだ生きていた。焼け跡の匂いのなか、すゑは娘の手を引いて、歩き出した。',
-    '国の歴史が、この時代をどんな名で呼ぶのだとしても。すゑにとってそれは、「あの子の手を、離さなかった年月」だった。',
-  ]},
-  { no:'十二', era:'平成', ttl:'平 成', who:'団地 ・ まさ子', p:[
-    'テレビの中で、時代の名が、変わった。',
-    '「平成(へいせい)」と、白い額(がく)が掲げられた朝を、まさ子は、小さな団地(だんち)の茶の間で見ていた。戦争を知る母――幼い日、防空壕で手を握られた、あの娘(こ)――は、もう、ずいぶん年老いていた。',
-    '国は、豊かになったという。車があり、テレビがあり、誰も飢えない。かつて村を焼き、夫を、子を奪った同じ国が、いまは静かに、平らだった。',
-    'やがて、好景気(こうけいき)は、泡(あわ)のように消えた。まさ子の夫の会社も、傾いた。それでも、飢えはしなかった。',
-    '母が息を引き取る夜、まさ子は、その手を握った。しわだらけの、小さな手だった。母は最期に、握り返した。何も言わず、ただ、握り返した。',
-    'その握り方に、まさ子は、覚えがあった。幼い日、自分が握られた、あの握り方だった。千五百年そうして握られてきたのだと――まさ子は、まだ、知らない。',
-  ]},
-  { no:'十三', era:'令和', ttl:'令 和', who:'ある街 ・ 名を継ぐ者', p:[
-    '電車が、揺れている。',
-    '夕方の車内。あなたは、隣で船を漕ぐ子どもの、小さな手を握っている。窓の外を、千五百年ぶんの街の灯りが、流れていく。',
-    '古墳を積んだ手も、都の泥をついた手も、戦火の暗がりで握られた手も――名は、ひとつも残っていない。歴史の本に、彼らの頁(ページ)はない。',
-    'けれど、いま、あなたの掌(てのひら)のなかで眠るこの子の手の熱さは、たしかに、あの日のひなの手の熱さと、地続きだ。',
-    '千五百年、握られ続けた手が、いま、この子を握っている。',
-    'やがてこの子も、誰かの手を握るだろう。名も残さず。けれど、たしかに――温かく。',
-  ]},
+/* ============ 時代（13） ============ */
+const ERAS=[
+  {name:'古墳時代', short:'古墳', who:'河内のむら ・ ひな',        from:1,  to:5,  ac:'#c0883a'},
+  {name:'飛鳥時代', short:'飛鳥', who:'飛鳥の里 ・ あすか',        from:6,  to:10, ac:'#c2a13c'},
+  {name:'奈良時代', short:'奈良', who:'東国の村 ・ たみ',          from:11, to:16, ac:'#b09248'},
+  {name:'平安時代', short:'平安', who:'都 ・ 下女、あこ',          from:17, to:22, ac:'#a5768c'},
+  {name:'鎌倉時代', short:'鎌倉', who:'博多の浜 ・ 御家人、又七',  from:23, to:30, ac:'#7f95c0'},
+  {name:'室町時代', short:'室町', who:'焼ける都 ・ きく',          from:31, to:37, ac:'#8a9a6a'},
+  {name:'戦国',     short:'戦国', who:'落ちる山城 ・ 武家の娘、たね', from:38, to:46, ac:'#c05a3c'},
+  {name:'江戸時代', short:'江戸', who:'長屋 ・ さと',              from:47, to:54, ac:'#5f8a76'},
+  {name:'明治時代', short:'明治', who:'糸を繰る町 ・ ちよ',        from:55, to:62, ac:'#7a7c9c'},
+  {name:'大正時代', short:'大正', who:'燃える町 ・ はる',          from:63, to:69, ac:'#c08a4a'},
+  {name:'昭和',     short:'昭和', who:'焼け跡の街 ・ 母、すゑ',    from:70, to:78, ac:'#94705c'},
+  {name:'平成',     short:'平成', who:'団地 ・ まさ子',            from:79, to:84, ac:'#6f96a0'},
+  {name:'令和',     short:'令和', who:'ある街 ・ 名を継ぐ者',      from:85, to:90, ac:'#8f8f7a'},
+];
+function eraOf(d){ return ERAS.find(e=>d>=e.from && d<=e.to); }
+
+/* ============ 九十日の本文 ============ */
+const DAYS=[
+/* ─ 古墳 1-5 ─ */
+{t:'山が、できていく', p:['山が、できていく。','人の手で土を運び、突き固め、幾百の背が朝から晩まで動いて、大王(おおきみ)の眠る山が、日ごとに空へせり上がっていく。','ひなは、母の背から、それを見ていた。','山の名は、やがて千年、残る。土を運ぶ者の名は、その日のうちに、風が消していく。']},
+{t:'土を運ぶ手', p:['父の掌(てのひら)は、土で黒く割れていた。','なぜ、この一族がその土を運ぶのか、ひなは知らない。大王が誰かも、知らない。','ただ、朝に発ち、夜に帰る父の背が、日に日に薄くなっていくことだけを、知っていた。','「大きな人が、死んだのだ」と母は言った。「わたしたちは、土を盛る」。']},
+{t:'名のある死、名のない死', p:['土を運ぶ列のなかで、ひとり、倒れた者がいた。','夏の盛りだった。運ばれもせず、土の脇に、浅く埋められた。名を呼ぶ声は、なかった。','同じころ、山の頂には、大王のための石が、遠い海から運ばれていた。','死んで山になる者と、死んで土になる者と。ひとつの死が、二つに分かれていた。']},
+{t:'大王が、山になる', p:['やがて、山は、できあがった。','大王の亡骸(なきがら)が、幾重もの土の底へ、静かに納められていく。','人々は遠く離れ、頭(こうべ)を垂れた。父も、割れた掌を膝に置いて、垂れていた。','大王は山になり、名を残した。山を盛った者たちは、名を残さない。それが、この国の、はじまりの決まりだった。']},
+{t:'掌の熱', p:['仕事の終わった夜、父は、囲炉裏のそばで、ひなの小さな手を握った。','土で割れた掌は、ひどく、熱かった。','けれど、握られた手のその熱さは――ひなから、その子へ、その子の子へと、握られ続けていく。','<b>それだけが、この一族の、たったひとつの相続だった。</b>']},
+/* ─ 飛鳥 6-10 ─ */
+{t:'金色(こんじき)の人', p:['海の向こうから、金色の人が来た、という。','御方(おかた)の寺に、新しい仏(ほとけ)が、金色に光って坐(ざ)していた。','あすかは、父の後ろから、それを見上げた。まぶしくて、目を細めた。']},
+{t:'柱を、削る', p:['父は、その御堂(みどう)の柱を削った、幾人もの手のひとりだった。','木くずにまみれ、朝から晩まで、木を削る。','仏は金色に光り、柱を削る手は、木の色をしていた。']},
+{t:'神々が、争う', p:['「あれは、新しい神さまだ」と、里の者はひそひそ言った。','「都の偉い方々が、どちらの神を敬うかで、争っておられる」。','古い神か、新しい仏か。豪族(ごうぞく)たちは、それを名分(めいぶん)に、殺し合っているのだという。','あすかには、どちらの神も、遠かった。']},
+{t:'都が、移る', p:['争いは、勝つ者と負ける者を、はっきりと分けた。','負けた家は、名ごと、消えた。勝った家の名が、石碑(せきひ)に刻まれていく。','柱を削った父の名は、どこにも刻まれない。']},
+{t:'握り返す手', p:['金の光がまぶしくて、あすかは、思わず父の手を握った。','木くずで荒れたその手が、握り返してきた。','神々が争い、都が移り、名が刻まれ、また消えていく。','あすかが持って帰ったのは、荒れた手の、その握り返しの強さだけだった。']},
+/* ─ 奈良 11-16 ─ */
+{t:'大きな仏を、造るという', p:['都では、途方もなく大きな仏(ほとけ)が、造られているという。','金と、汗と、幾万の人手を集めて。','たみの村からも、米が運ばれ、男が徴(と)られていった。']},
+{t:'東(あづま)の果てへ', p:['夫のもとへ、役人が、紙を持ってきた。','防人(さきもり)、と言った。遠い筑紫(つくし)の海を、名も知らぬ敵から守るのだと。','発つのは、三日後だった。']},
+{t:'なぜ、この村の男が', p:['なぜ、東の村の男が、見たこともない西の海を守らねばならぬのか。','たみには、わからなかった。夫にも、わからなかった。','大きな仏を造る同じ国が、たみから、夫を取り上げた。それだけが、たしかだった。']},
+{t:'発つ、朝', p:['発つ朝、夫は、たみの手を、長いあいだ握っていた。','言葉は、なかった。','ただ、掌の熱だけを、たみに預けるように。']},
+{t:'歌ひとつ、残さず', p:['夫は、帰らなかった。','筑紫で死んだとも、海で死んだとも、誰も報(しら)せてはこなかった。','都の歌集には、防人の歌が、いくつも残った。夫の歌は、ひとつも、なかった。']},
+{t:'子の手を、握る', p:['たみは、生まれた子の手を握った。','夫がそうしたように、長く、黙って、握った。','<b>それが、たみに残された、たったひとつの、夫だった。</b>']},
+/* ─ 平安 17-22 ─ */
+{t:'牛車(ぎっしゃ)が、通る', p:['牛車が、通り過ぎていく。','簾(すだれ)の隙間から、絹の色がこぼれ、香が漂った。','あこは道の端に膝をつき、泥に手をついて、それが過ぎるのを待った。']},
+{t:'土に、触れぬ人', p:['あの中の姫君は、生涯、土に触れることがないのだという。','歌を詠み、香を薫(た)き、物語を読んで、暮らすのだと。','あこは、その同じ都の、洗い場にいた。']},
+{t:'洗い物と、薪の手', p:['あこの手は、洗い物と薪(まき)で、もう子どもの手ではなかった。','あかぎれが割れ、冬は、血がにじんだ。','姫君の手と、あこの手は、同じ都で、まるで違う生きものだった。']},
+{t:'みやびは、書物に残る', p:['都は、千年の雅(みやび)を、書物に残していく。','姫君の名も、その恋も、几帳(きちょう)の陰のため息までも。','あこの名は、どこにも書かれない。書くための筆を、あこは持たなかった。']},
+{t:'妹の、熱', p:['夜、下女(げじょ)部屋で、幼い妹が熱を出した。','あこは、その手を握った。硬く、荒れた、自分の手で。','薬も、医者も、この部屋には、来ない。']},
+{t:'握った手は、温かい', p:['ただ、握った手は、温かかった。','それでいい、とあこは思った。','雅は書物に残り、この温かさは、書物に残らない。それでも、たしかに、ここにあった。']},
+/* ─ 鎌倉 23-30 ─ */
+{t:'海が、鉄の色', p:['海が、鉄の色を、していた。','弘安(こうあん)四年の夏。沖には、見渡すかぎり、蒙古(もうこ)の軍船。','数は、味方の幾十倍とも、知れぬ。']},
+{t:'石の防塁(ぼうるい)', p:['博多の浜には、石の防塁が築かれていた。','御家人(ごけにん)たちが、身銭(みぜに)を切り、人を出して、積み上げた石だった。','又七(またしち)は、その陰で、槍を握りしめていた。']},
+{t:'名もなき御家人', p:['又七は、名もなき御家人であった。','先祖代々、わずかな田を賜(たまわ)る代わりに、いざという時は、命を的(まと)に戦う。','それが、武士(もののふ)というものだった。']},
+{t:'小舟を、漕ぎ出す', p:['「討ち死にすれば、恩賞(おんしょう)が出る。生きて手柄を立てれば、なお」。','己に言い聞かせ、又七は、敵船へ小舟を漕ぎ出した。','矢が降り、火が奔(はし)り、隣を漕ぐ若い郎党(ろうとう)が、声も上げずに、海へ落ちた。']},
+{t:'天が、割れた', p:['その夜、天が、割れた。','嵐だった。蒙古の船は木の葉のように砕け、海へ沈んでいく。','神風(かみかぜ)、と誰かが叫んだ。国は、救われた。']},
+{t:'恩賞は、なかった', p:['だが――又七に、恩賞は、なかった。','敵を討ち払っただけで、奪った土地は、ひとつもない。分け与える田が、どこにもないのだ。','命を賭けた御家人たちは、借財(しゃくざい)を負い、田を手放し、痩(や)せていった。']},
+{t:'鍬(くわ)を握る手に、戻る', p:['国を救った手柄は、又七を、豊かにはしなかった。','武士の手だと思っていた自分の掌は、いつのまにか、鍬を握る百姓の手と、変わらなくなっていた。','鎌倉の御政道(ごせいどう)は、そのころから、静かに、傾きはじめる。']},
+{t:'息子の手の、熱', p:['故郷(くに)へ帰った夜、又七は、幼い息子の手を握った。','勝ったのか、負けたのかも、わからぬ一生だった。','<b>ただ握った息子の手の熱さだけが、たったひとつ、たしかなものだった。</b>']},
+/* ─ 室町 31-37 ─ */
+{t:'都が、焼ける', p:['都が、焼けていた。','武士たちが、都のただなかで、争い続けていた。','応仁(おうにん)の乱、と後の世は呼ぶ。きくは、その火を、幼い目で見た。']},
+{t:'十年、また十年', p:['争いは、十年、そのまた十年と、終わらなかった。','まちは、幾度も焼けた。焼けては、また、人が住んだ。','誰が勝っているのか、もう、誰にもわからなかった。']},
+{t:'上(かみ)の、争い', p:['「上の争いだ」と、父は吐き捨てた。','「わしらには、名も、理由(わけ)も、わからぬ」。','将軍(しょうぐん)の跡目(あとめ)争い、と噂は言った。きくには、遠い言葉だった。']},
+{t:'焼け出される', p:['ある夜、火は、きくの家にも回った。','一家は焼け出され、鍋(なべ)ひとつ、着物ひと重ねを負って、外へ出た。','振り返ると、暮らした家が、赤く崩れていくところだった。']},
+{t:'東へ、流れる列', p:['荷を負って、東へ流れていく人の列に、きくの一家も加わった。','逃散(ちょうさん)、という。田を捨て、村を捨て、火のない土地を探して歩く。','道の両側に、力尽きた者が、座り込んでいた。']},
+{t:'弟の手を、引いて', p:['流れる道の途中、幼い弟が、疲れて泣いた。','きくは、その小さな手を握って、歩いた。','焼けた都の煙を背に、名もなき人の列の中で、手だけを、離さずに。']},
+{t:'世は、戦国へ', p:['乱は、やがて全国へ、広がった。','上が下に食われ、下がまた上を食う。世は、下剋上(げこくじょう)の戦国へ、雪崩(なだれ)ていく。','<b>その大きな流れの、ほんの一滴として、きくは弟の手を握り、生き延びた。ただ、それだけを。</b>']},
+/* ─ 戦国 38-46 ─ */
+{t:'城を、預かる父', p:['たねの父は、小さな山城(やまじろ)を預かる、名もなき侍(さむらい)であった。','石垣は低く、兵は少ない。それでも、父の城だった。','たねは、武家の娘として、その城で生まれた。']},
+{t:'下剋上(げこくじょう)', p:['仕えた主(あるじ)が、より大きな力に、飲まれた。','その主に仕えた父も、また、飲まれようとしていた。','下剋上とは、そういうことだった。上が下を食い、下がまた上を食う。強い者だけが、生き残る世。']},
+{t:'寄せ手の、鬨(とき)', p:['その夜、寄せ手の鬨の声が、闇を埋めた。','松明(たいまつ)が、山を這(は)いのぼってくる。','曲輪(くるわ)に、火が、入った。']},
+{t:'母の手が、掴(つか)む', p:['母は、たねの手を掴み、燃える曲輪を、裏手の崖(がけ)へと駆けた。','「生きよ」と、母は言った。','「名など要らぬ。生きて、子を産め。それが、我らの戦(いくさ)ぞ」。']},
+{t:'父は、大手門に残る', p:['父は、大手門(おおてもん)に、残った。','振り返らなかった。','それが、たねの見た、父の最後の背中だった。']},
+{t:'崖を、下る', p:['崖を、下った。','木の根を掴み、岩に足をかけ、母は、たねの手を、一度も離さなかった。','下では、川が、黒く流れていた。']},
+{t:'川に、身を沈める', p:['川に、身を沈めた。','落ち武者狩りの松明が、岸の上を、ゆっくりと過ぎていく。','息を止め、母の手だけを、握っていた。']},
+{t:'山が、燃えていた', p:['夜が明けたとき、山の上の城は、まだ赤く、燃えていた。','父の名も、城の名も、やがて誰も、覚えない。','天下を取る者の名だけが、大きく、残る。']},
+{t:'家(いえ)を、捨てる', p:['母の手は、川の水で、氷のように冷たかった。それでも、たねの手を、離さなかった。','その夜、たねは、家を捨てた。次の朝からは、ただの百姓の女房(にょうぼう)として、生きていく。','<b>握られた手の熱だけを、失(う)せた家の証(あかし)の代わりに、握って生きた。</b>']},
+/* ─ 江戸 47-54 ─ */
+{t:'戦の音が、絶えて久しい', p:['戦(いくさ)の音が、絶えて、久しい。','さとが生まれてこのかた、田畑を焼く軍も、逃げ惑う夜も、なかった。','祖母は「ありがたいことだ」と、何度も言った。']},
+{t:'焼けぬ、夜', p:['祖母の、そのまた祖母の頃は、まだ、村が焼けた話が、残っていたという。','いまは、焼けない。','その一事が、どれほどのものか、さとは、まだ知らなかった。']},
+{t:'大名(だいみょう)行列', p:['大名の行列が通る日は、みな道の端に、平伏(ひれふ)した。','槍(やり)と、長持(ながもち)と、絹の羽織が、金の音を立てて過ぎていく。','その大名の名を、さとは知らない。']},
+{t:'顔を、上げてはならぬ', p:['「顔を、上げてはならぬ」と、母は小声で言った。','さとは、地面を見つめていた。土と、草履(ぞうり)の裏と、自分の膝を。','身分(みぶん)、という見えない線が、道の上に、引かれていた。']},
+{t:'妹の手を、そっと', p:['平伏したまま、さとは、隣の幼い妹の手を、そっと握った。','誰にも、見えぬように。','行列がどれほど偉かろうと、この手の熱さは、行列のものでは、なかった。']},
+{t:'長屋の、灯り', p:['夜、長屋の灯りの下で、母は繕(つくろ)いをし、父は湯屋(ゆや)の話をした。','妹は、膝で眠っていた。','名もない、けれど、焼けない夜だった。']},
+{t:'湯屋の、話', p:['父は、湯屋で聞いた話を、面白おかしく語った。','瓦版(かわらばん)の噂、相撲(すもう)の勝ち負け、隣町の火事。','天下の大事は、そのどれにも、まぎれていた。']},
+{t:'この温かさのために', p:['握った妹の手は、恐れではなく、ただ、温かかった。','この温かさのために、幾百年、手は握られてきたのかもしれない。','さとは、まだそれを知らずに、眠った。']},
+/* ─ 明治 55-62 ─ */
+{t:'汽車が、煙を吐く', p:['汽車が、煙を吐いて、走っていた。','鉄の道が、国じゅうに、敷かれていく。','ちよは、その汽車に、乗せられた。']},
+{t:'遠い町へ、売られる', p:['糸を繰(く)る工女(こうじょ)、と呼ばれた。','遠い町の工場(こうば)へ、年季(ねんき)で売られたのだ。','年季が明けるまで、村へは、帰れない。']},
+{t:'お国のため、家のため', p:['「お国のため、家(いえ)のためだ」と、村を出る朝、父は言った。','文明開化(ぶんめいかいか)、富国強兵(ふこくきょうへい)。偉い人々は、そう説いた。','ちよには、その言葉の意味が、わからなかった。']},
+{t:'糸を、繰る', p:['朝は暗いうちに起き、夜は星が出てから、床(とこ)についた。','指は、熱い湯と、細い糸で、白くふやけ、ときに、切れた。','繰った糸は、やがて海を渡り、この国を、豊かにするのだという。']},
+{t:'眠れぬ、夜', p:['眠れぬ夜、ちよは、村の母を思った。','母の手も、こんなふうに、荒れていた。','同じ手が、いま、遠く離れて、同じように、荒れている。']},
+{t:'電信柱が、飛ぶ', p:['窓の外を、初めて見る電信柱(でんしんばしら)が、飛ぶように、過ぎていく。','国は、坂の上の雲を目指して、急いでいた。','その速さに、ちよは、ただ、揺られていた。']},
+{t:'同い年の、手', p:['隣で、同い年の工女が、泣いていた。','ちよは、その手を、そっと握った。荒れて、糸で切れた、自分の手で。','握った手は、温かかった。それが、遠い村の、母の手に、似ていた。']},
+{t:'坂の、どこにも', p:['国は、豊かになっていった。','汽車は増え、工場は建ち、糸は、海を渡った。','その坂の、どこにも、ちよの名は刻まれない。ただ、糸だけが、残った。']},
+/* ─ 大正 63-69 ─ */
+{t:'明るい世だ、と町は言った', p:['新しい世だ、と町は言っていた。','女(おんな)も学びはじめ、髪を結いなおし、通りを歩いた。','はるは、その明るさの中で、大人になった。']},
+{t:'電灯と、活動写真', p:['電灯が灯り、夜が、明るくなった。','活動写真(かつどうしゃしん)の中で、人が動き、笑い、泣いた。','はるは、その光を、まぶしいと思った。']},
+{t:'昼どき、地が割れる', p:['昼どき、火を使う刻(とき)だった。','大地が、うねった。','家々が、傾き、崩れた。大正(たいしょう)の、あの大きな地震(なゐ)だった。']},
+{t:'火が、出た', p:['そして、火が、出た。','あちこちの竈(かまど)から立った火が、風にあおられ、町を舐(な)めていく。','明るい町が、一日で、灰になろうとしていた。']},
+{t:'逃げ惑う、波', p:['はるは、逃げ惑う人の波の中に、いた。','荷を負う者、子を抱く者、名を呼び合う声。','その声の多くは、二度と、答えを得なかった。']},
+{t:'両の手が、ふさがる', p:['火の粉のなかを、はるは、はぐれかけた幼い子の手を、力いっぱい握って走った。','もう片方の手は、老いた父を、引いていた。','両の手が、ふさがっていた。それでも、離さなかった。']},
+{t:'掌に、二つの熱', p:['幾万の名が、その日、失われた。多くは、名簿にも、残らなかった。','生き延びて焼け跡に立ったとき、はるの両の掌には、握りしめた二つの手の熱が、まだ、残っていた。','<b>その熱だけが、はるに、生きていることを教えた。</b>']},
+/* ─ 昭和 70-78 ─ */
+{t:'南の島の、名', p:['新聞が、遠い南の島の名を、報じていた。','聞いたこともない島で、この国の男たちが、戦っているのだという。','すゑの夫も、そのひとりだった。']},
+{t:'大本営は、勝利を告げる', p:['大本営(だいほんえい)は、勝利を、告げ続けた。','だが、町からは、男が、ひとり、またひとりと、消えていった。','勝っているはずの戦(いくさ)で、なぜ、と、誰も口には出さなかった。']},
+{t:'警報', p:['警報が、鳴った。','走る足。閉じる雨戸。消される灯り。','すゑは、四つになる娘の手を握って、防空壕(ぼうくうごう)へ、走った。']},
+{t:'防空壕の、暗がり', p:['防空壕の暗がりで、すゑは、娘の手を握りしめていた。','頭の上を、地の底を、音が、通り過ぎていく。','すゑの世界は、この暗がりと、この小さな手の熱さが、すべてだった。']},
+{t:'娘は、泣かなかった', p:['娘は、泣かなかった。','ただ、母の手を、握り返していた。','新聞の伝える勝利も、南の島の名も、この暗がりには、届かなかった。']},
+{t:'空が、燃える', p:['外へ出ると、空が、燃えていた。','街が、赤かった。','焼夷弾(しょういだん)というものが、天から、降ったのだという。']},
+{t:'朝が、来た', p:['朝が来て、二人は、まだ生きていた。','焼け跡の匂いのなか、瓦礫(がれき)の間に、見知った顔が、いくつも、なかった。','すゑは、娘の手を、握りなおした。']},
+{t:'焼け跡を、歩き出す', p:['すゑは、娘の手を引いて、歩き出した。','行く先は、なかった。それでも、歩いた。','生きている者は、歩かねばならなかった。']},
+{t:'離さなかった年月', p:['国の歴史が、この時代を、どんな名で呼ぶのだとしても。','すゑにとってそれは、「あの子の手を、離さなかった年月」だった。','<b>勝敗も、大義も、すゑの掌の外にあった。掌の中には、ただ、娘の手が、あった。</b>']},
+/* ─ 平成 79-84 ─ */
+{t:'時代の名が、変わる', p:['テレビの中で、時代の名が、変わった。','「平成(へいせい)」と、白い額(がく)が掲げられた朝を、まさ子は、団地(だんち)の茶の間で見ていた。','隣には、年老いた母がいた。あの、防空壕で手を握られた、娘だった。']},
+{t:'豊かに、なったという', p:['国は、豊かになった、という。','車があり、テレビがあり、誰も、飢えない。','かつて村を焼き、夫を、子を奪った同じ国が、いまは静かに、平らだった。']},
+{t:'泡(あわ)が、消えた', p:['やがて、好景気(こうけいき)は、泡のように、消えた。','土地の値も、株の値も、崩れていく、と新聞は書いた。','まさ子には、その数字は、遠かった。']},
+{t:'傾く、会社', p:['まさ子の夫の会社も、傾いた。','それでも、飢えはしなかった。焼けも、しなかった。','その二つがどれほどのことか、まさ子は、母の顔を見るたびに、思った。']},
+{t:'母の、小さな手', p:['母が、床(とこ)についた。','しわだらけの、小さな手だった。','まさ子は、その手を、握った。']},
+{t:'握り返した', p:['母は最期に、握り返した。','何も言わず、ただ、握り返した。','その握り方に、まさ子は、覚えがあった。幼い日、自分が握られた、あの握り方だった。<b>千五百年そうして握られてきたのだと――まさ子は、まだ、知らない。</b>']},
+/* ─ 令和 85-90 ─ */
+{t:'街の灯が、流れる', p:['電車が、揺れている。','夕方の車内。窓の外を、街の灯りが、流れていく。','あなたは、隣で船を漕ぐ子どもの、小さな手を、握っている。']},
+{t:'手のひらの、板', p:['手のひらの中には、光る板(いた)がある。','その中に、世界じゅうの言葉が、絶えず流れ込んでくる。','けれど、いま、あなたが握っているのは、板ではない。この子の、手だ。']},
+{t:'名は、ひとつも残らない', p:['古墳を積んだ手も、都の泥をついた手も、戦火の暗がりで握られた手も。','名は、ひとつも、残っていない。','歴史の本に、彼らの頁(ページ)は、ない。']},
+{t:'けれど、熱は地続き', p:['けれど、いま、あなたの掌のなかで眠る、この子の手の熱さは。','たしかに、あの日の、ひなの手の熱さと、地続きだ。','千五百年、途切れずに。']},
+{t:'握られ続けた手が', p:['千五百年、握られ続けた手が、いま、この子を握っている。','名を残した者たちの物語は、本の中に、ある。','この、名を残さなかった者たちの物語は――<b>あなたの掌の中に、ある。</b>']},
+{t:'やがて、この子も', p:['やがてこの子も、誰かの手を握るだろう。','名も残さず。','けれど、たしかに――温かく。','これで、九十日の物語は、了(お)わる。握った手を、離さぬままに。']},
 ];
 
-function el(tag,cls,html){ const e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e; }
-function render(){
-  const P=$("#pages"); P.innerHTML='';
-  // 献辞入り 序
-  const jo=el('div','ch');
-  const job=el('div','jo');
-  job.appendChild(el('div','h','序'));
-  if(FAM) job.appendChild(el('p', null, `――<b>${FAM}</b>家に伝わる、名もなき者たちの物語。`));
-  JO.forEach(t=>job.appendChild(el('p',null,t)));
-  jo.appendChild(job); P.appendChild(jo);
-  // 各章
-  CH.forEach(c=>{
-    const ch=el('div','ch');
-    const t=el('div','tobira');
-    t.appendChild(el('div','no', c.no));
-    t.appendChild(el('div','ttl', c.ttl));
-    t.appendChild(el('div','who', c.who));
-    ch.appendChild(t);
-    const b=el('div','body');
-    c.p.forEach(par=>b.appendChild(el('p', null, par)));
-    ch.appendChild(b);
-    P.appendChild(ch);
-  });
-  P.appendChild(el('div','fin','― 了 ―'));
+/* ============ 漢数字 ============ */
+function kan(n){
+  const d=['','一','二','三','四','五','六','七','八','九'];
+  if(n<10) return d[n];
+  if(n<20) return '十'+d[n-10];
+  const t=Math.floor(n/10), o=n%10;
+  return d[t]+'十'+d[o];
 }
-$("#open").onclick=()=>{
-  FAM=($("#kamei").value||'').trim();
-  render();
-  $("#cover").style.display='none';
-  $("#book").classList.add('show'); $("#head").classList.add('show'); $("#hint").classList.add('show');
-  const P=$("#pages"); requestAnimationFrame(()=>{ P.scrollLeft=P.scrollWidth; });  // 右端＝物語の始まり
+
+/* ============ 状態（保存） ============ */
+const KEY='tenohira.v1';
+let ST={ fam:'', start:0, read:[], peek:0 };
+function load(){ try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s) ST=Object.assign(ST,s);}catch(e){} }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(ST)); }catch(e){} }
+function midnight(ms){ const d=new Date(ms); d.setHours(0,0,0,0); return d.getTime(); }
+// 解禁日数：開始日から数えて1日1話。peek（ためし読み）で先へ進める。
+function unlocked(){
+  const days=Math.floor((midnight(Date.now())-midnight(ST.start))/DAY_MS)+1;
+  return Math.max(1, Math.min(90, Math.max(days, 1+ST.peek)));
+}
+function isRead(d){ return ST.read.includes(d); }
+function markRead(d){ if(!isRead(d)){ ST.read.push(d); save(); } }
+// ホームで開くべき「今日の一話」：解禁済みで未読の最初の日、なければ最新解禁日
+function todayDay(){
+  const u=unlocked();
+  for(let d=1; d<=u; d++) if(!isRead(d)) return d;
+  return u;
+}
+
+/* ============ 画面遷移 ============ */
+const SCR=['cover','home','reader','toc','jo'];
+function show(id){ SCR.forEach(s=>$('#'+s).classList.toggle('show', s===id)); }
+function setAc(d){ const e=eraOf(d); if(e) document.documentElement.style.setProperty('--ac', e.ac); }
+
+/* ============ ホーム描画 ============ */
+function renderHome(){
+  const d=todayDay(), e=eraOf(d);
+  setAc(d);
+  $('#dedic').innerHTML = ST.fam ? `――<b>${ST.fam}</b>家に伝わる、名もなき者たちの物語。` : '名もなき者たちの、千五百年の物語。';
+  const done = ST.read.length>=90;
+  if(done){
+    $('#todayN').innerHTML=''; $('#todayEra').textContent=''; $('#todayTtl').textContent='';
+    $('#todayTease').innerHTML='<span class="allread">九十日を、読み終えました。<br>握った手は、まだ、温かいまま。</span>';
+    $('#openToday').textContent='もう一度、はじめから';
+  }else{
+    $('#todayN').innerHTML = `第<span class="ji">${kan(d)}</span>日`;
+    $('#todayEra').textContent = e.name+' ・ '+e.who;
+    $('#todayTtl').textContent = DAYS[d-1].t;
+    $('#todayTease').textContent = DAYS[d-1].p[0].replace(/\(.*?\)/g,'');
+    $('#openToday').textContent = isRead(d)? 'もう一度、よむ' : 'よ　む';
+  }
+  const n=ST.read.length;
+  $('#progTxt').textContent=`${n} / 90`;
+  $('#progFill').style.width=(n/90*100)+'%';
+  $('#progPct').textContent=Math.round(n/90*100)+'%';
+}
+
+/* ============ 読書（頁めくり） ============ */
+let R={ day:1, page:0, pages:1 };
+function openDay(d){
+  if(d<1||d>90) return;
+  if(d>unlocked()) return;
+  R.day=d; R.page=0; setAc(d);
+  const e=eraOf(d);
+  $('#rEra').textContent = `第${kan(d)}日　${e.short}`;
+  const reel=$('#reel'); reel.innerHTML='';
+  reel.style.transition='none'; reel.style.transform='translateX(0)';
+  const tob=el('div','etobira');
+  tob.appendChild(el('div','no', `第 ${kan(d)} 日`));
+  tob.appendChild(el('div','ttl', DAYS[d-1].t));
+  tob.appendChild(el('div','who', e.who));
+  reel.appendChild(tob);
+  const body=el('div','ebody');
+  DAYS[d-1].p.forEach(par=>body.appendChild(el('p',null,par)));
+  reel.appendChild(body);
+  $('#done').classList.remove('show');
+  $('#rhint').style.display='';
+  show('reader');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    reel.style.transition='';
+    layout();
+  }));
+}
+function layout(){
+  const stage=$('#stage'), reel=$('#reel');
+  const sw=stage.clientWidth, tw=reel.scrollWidth;
+  R.pages=Math.max(1, Math.ceil(tw/sw - 0.02));
+  if(R.page>R.pages-1) R.page=R.pages-1;
+  applyPage(false);
+  renderDots();
+}
+function applyPage(anim){
+  const reel=$('#reel'), sw=$('#stage').clientWidth;
+  reel.style.transition = anim?'':'none';
+  reel.style.transform=`translateX(${R.page*sw}px)`;
+  if(!anim) requestAnimationFrame(()=>reel.style.transition='');
+}
+function renderDots(){
+  const dd=$('#rdots'); dd.innerHTML='';
+  if(R.pages<2) return;
+  for(let i=0;i<R.pages;i++){ const s=el('i'); if(i===R.page) s.className='on'; dd.appendChild(s); }
+}
+function next(){
+  $('#rhint').style.display='none';
+  if(R.page < R.pages-1){ R.page++; applyPage(true); renderDots(); }
+  else { finishDay(); }
+}
+function prev(){
+  $('#rhint').style.display='none';
+  if($('#done').classList.contains('show')){ $('#done').classList.remove('show'); return; }
+  if(R.page>0){ R.page--; applyPage(true); renderDots(); }
+}
+function finishDay(){
+  markRead(R.day);
+  const d=R.day;
+  $('#doneTtl').textContent = `第${kan(d)}日「${DAYS[d-1].t}」`;
+  const e=eraOf(d);
+  $('#doneDtl').textContent = `${e.name} ・ ${e.who}`;
+  const nxt=$('#doneNxt'), acts=$('#doneActs');
+  acts.innerHTML='';
+  if(d>=90){
+    nxt.innerHTML='<span class="lbl">奥付</span>てのひらの、千五百年 ―― 全九十日 ・ 了<br>握った手を、離さぬままに。';
+    const b=el('button','go','はじめへ　もどる'); b.onclick=()=>{ show('home'); renderHome(); };
+    acts.appendChild(b);
+  }else if(d+1<=unlocked()){
+    const ne=eraOf(d+1);
+    nxt.innerHTML=`<span class="lbl">次の一話</span>第${kan(d+1)}日「${DAYS[d].t}」<br><span style="color:var(--sub)">${ne.name}</span>`;
+    const b=el('button','go','▷　次の一話へ'); b.onclick=()=>openDay(d+1);
+    acts.appendChild(b);
+  }else{
+    // 明日、解禁
+    nxt.innerHTML=`<span class="lbl">明日の一話</span>第${kan(d+1)}日「${DAYS[d].t}」<br><span class="lock">物語は、明日にとっておきましょう。</span>`;
+    const pk=el('button','peek','▷　今日のうちに、先を読む'); pk.onclick=()=>{ ST.peek=Math.max(ST.peek, d); if(1+ST.peek<d+1)ST.peek=d; save(); openDay(d+1); };
+    acts.appendChild(pk);
+  }
+  const sl=el('div','sub-links');
+  const hb=el('button',null,'ホーム'); hb.onclick=()=>{ show('home'); renderHome(); };
+  const tb=el('button',null,'目次'); tb.onclick=()=>{ renderToc(); show('toc'); };
+  sl.appendChild(hb); sl.appendChild(tb); acts.appendChild(sl);
+  $('#done').classList.add('show');
+  renderHome();
+}
+
+/* ============ 目次 ============ */
+function renderToc(){
+  const u=unlocked(), cur=todayDay(), wrap=$('#tocInner'); wrap.innerHTML='';
+  ERAS.forEach(e=>{
+    const blk=el('div','era-block');
+    const head=el('div','era-head');
+    head.innerHTML=`<span class="en">${e.name}</span><span class="ew">${e.who}</span><span class="ed">第${kan(e.from)}〜${kan(e.to)}日</span>`;
+    blk.appendChild(head);
+    const cells=el('div','cells'); cells.style.setProperty('--eac', e.ac);
+    cells.style.gridTemplateColumns=`repeat(${Math.min(6, e.to-e.from+1)}, 1fr)`;
+    for(let d=e.from; d<=e.to; d++){
+      const c=el('div','cell', kan(d));
+      c.style.setProperty('--eac', e.ac);
+      if(isRead(d)) c.classList.add('read');
+      else if(d<=u) c.classList.add('open');
+      else c.classList.add('lock');
+      if(d===cur && !isRead(d)) c.classList.add('cur');
+      if(d<=u) c.onclick=()=>openDay(d);
+      cells.appendChild(c);
+    }
+    blk.appendChild(cells); wrap.appendChild(blk);
+  });
+}
+
+/* ============ 序 ============ */
+function renderJo(){
+  const b=$('#joBody'); b.innerHTML='';
+  if(ST.fam) b.appendChild(el('p','d', `――${ST.fam}家に伝わる、名もなき者たちの物語。`));
+  JO.forEach(t=>b.appendChild(el('p',null,t)));
+}
+
+/* ============ イベント ============ */
+$('#open').onclick=()=>{
+  ST.fam=($('#kamei').value||'').trim();
+  if(!ST.start) ST.start=Date.now();
+  save(); renderHome(); show('home');
 };
-$("#back").onclick=()=>{ $("#book").classList.remove('show'); $("#head").classList.remove('show'); $("#hint").classList.remove('show'); $("#cover").style.display='flex'; };
-// 走り：スクロール位置で時代表示
-$("#pages")&&$("#pages");
-document.addEventListener('scroll',()=>{},true);
+$('#toCover').onclick=()=>show('cover');
+$('#openToday').onclick=()=>{ if(ST.read.length>=90){ ST.read=[]; ST.peek=0; save(); renderHome(); } openDay(todayDay()); };
+$('#toToc').onclick=()=>{ renderToc(); show('toc'); };
+$('#tocClose').onclick=()=>{ show('home'); renderHome(); };
+$('#toJo').onclick=()=>{ renderJo(); show('jo'); };
+$('#joClose').onclick=()=>openDay(todayDay());
+$('#rClose').onclick=()=>{ renderToc(); show('toc'); };
+$('#tapNext').onclick=next;
+$('#tapPrev').onclick=prev;
+document.addEventListener('keydown',e=>{
+  if(!$('#reader').classList.contains('show')) return;
+  if(e.key==='ArrowLeft'||e.key===' '){ e.preventDefault(); next(); }
+  if(e.key==='ArrowRight'){ e.preventDefault(); prev(); }
+});
+window.addEventListener('resize',()=>{ if($('#reader').classList.contains('show')) layout(); });
+
+/* ============ 起動 ============ */
+load();
+if(ST.start){ $('#kamei').value=ST.fam; renderHome(); show('home'); }
+else show('cover');
 </script>
 </body>
 </html>
