@@ -221,6 +221,8 @@
   <div id="rbar"><span class="era" id="rEra"></span><button class="x" id="rClose">✕　もくじ</button></div>
   <div id="stage">
     <div id="reel"></div>
+    <div class="pmask l"></div>
+    <div class="pmask r"></div>
   </div>
   <div class="tap prev" id="tapPrev"></div>
   <div class="tap next" id="tapNext"></div>
@@ -572,7 +574,9 @@ function layout(){
   const pitch=parseFloat(cs.lineHeight);                       // 行送り(px)
   const PAD=34, sw=stage.clientWidth;
   R.step=Math.max(pitch, Math.floor((sw-PAD*2)/pitch)*pitch);  // 頁送り＝行の整数倍
-  reel.style.paddingLeft=(sw-PAD-R.step)+'px';                 // 余りは左余白へ＝見える幅も行の整数倍
+  $('#stage .pmask.l').style.width=(sw-PAD-R.step)+'px';       // 余りは左マスクへ＝見える幅も行の整数倍
+  $('#stage .pmask.r').style.width=PAD+'px';
+  reel.style.paddingLeft='34px';
   // 扉の送り幅を行送りの倍数に吸着（頁境界で行が割れないように）
   const tob=reel.querySelector('.etobira');
   if(tob){
@@ -590,9 +594,8 @@ function layout(){
   renderDots();
 }
 function applyPage(anim){
-  const reel=$('#reel'), sw=$('#stage').clientWidth;
-  const max=Math.max(0, reel.scrollWidth-sw);
-  const x=Math.min(R.page*(R.step||sw), max);
+  const reel=$('#reel');
+  const x=R.page*(R.step||$('#stage').clientWidth);
   reel.style.transition = anim?'':'none';
   reel.style.transform=`translateX(${x}px)`;
   if(!anim) requestAnimationFrame(()=>reel.style.transition='');
