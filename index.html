@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-store">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>てのひらの、千五百年</title>
+<title>鼎（かなえ）</title>
 <style>
   :root{
     --paper:#f2e9d6; --ink:#2a241c; --sub:#7a6f5a; --gold:#b08d3e; --indigo:#1a2740;
@@ -29,8 +29,10 @@
   #cover .frame{border:1px solid rgba(176,141,62,.5); border-radius:2px; padding:44px 26px; max-width:340px; width:100%;
     box-shadow:0 0 60px rgba(0,0,0,.5) inset;}
   #cover .kicker{font-size:11px; letter-spacing:.5em; text-indent:.5em; color:var(--gold); margin-bottom:26px;}
-  #cover h1{font-size:34px; font-weight:500; letter-spacing:.14em; line-height:1.5; color:#f2e6c8;
+  #cover h1{font-size:96px; font-weight:500; letter-spacing:0; line-height:1.15; color:#f2e6c8;
     text-shadow:0 2px 20px rgba(0,0,0,.5);}
+  #cover h1 rt{font-size:14px; letter-spacing:.55em; text-indent:.55em; color:var(--gold); margin-bottom:10px;}
+  rt{font-size:.42em; letter-spacing:0; opacity:.85; font-weight:400;}
   #cover .sub{font-size:12.5px; color:#c9bd9c; letter-spacing:.08em; line-height:1.9; margin-top:20px;}
   #cover .days{font-size:11px; color:var(--gold); letter-spacing:.28em; margin-top:14px;}
   #cover .line{width:44px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:24px auto;}
@@ -92,8 +94,13 @@
   .etobira .ttl{font-size:30px; letter-spacing:.2em; color:var(--ink); font-weight:500; margin-right:8px;}
   .etobira .who{font-size:13px; color:var(--sub); letter-spacing:.14em; margin-left:16px;}
   .ebody{display:inline-block; height:100%;}
-  .ebody p{margin-right:1.35em; text-indent:1em;}
+  .ebody p{margin-right:0; text-indent:1em;}
   .ebody b{font-weight:600;}
+  /* 頁の端を覆う余白マスク（隣頁の行の見切れ防止） */
+  .pmask{position:absolute; top:0; bottom:0; z-index:1; pointer-events:none;
+    background:var(--paper);
+    background-image:radial-gradient(rgba(120,100,60,.05) 1px, transparent 1px); background-size:3px 3px;}
+  .pmask.l{left:0;} .pmask.r{right:0;}
   /* タップゾーン */
   .tap{position:absolute; top:0; bottom:0; width:38%; z-index:2;}
   .tap.next{left:0;} .tap.prev{right:0;}
@@ -172,14 +179,11 @@
 <div id="cover" class="screen show">
   <div class="frame">
     <div class="kicker">Ａ　ＮＯＶＥＬ</div>
-    <h1>てのひらの、<br>千五百年</h1>
-    <div class="sub">古墳のむらから、令和の街まで<br>――名もなき者たちの物語</div>
+    <h1><ruby>鼎<rt>かなえ</rt></ruby></h1>
+    <div class="sub">飯を炊いた釜が、<br>天下の重さを量る。</div>
     <div class="days">全 九十日 ・ 一日に、一話</div>
     <div class="line"></div>
-    <div style="margin-top:2px;">
-      <input id="kamei" type="text" maxlength="8" placeholder="あなたの家名">
-      <div class="as">――この一族の名を</div>
-    </div>
+    <div class="sub" style="margin-top:0;">古墳から令和へ――<br>釜ひとつを継いだ一族の記録</div>
     <button class="open" id="open">ひらく</button>
   </div>
 </div>
@@ -187,7 +191,7 @@
 <!-- ========== ホーム ========== -->
 <div id="home" class="screen">
   <div class="h-top">
-    <span class="ttl">てのひらの、千五百年</span>
+    <span class="ttl">鼎（かなえ）</span>
     <button id="toCover">表紙</button>
   </div>
   <div class="h-mid">
@@ -257,16 +261,16 @@ const DAY_MS=86400000;
 
 /* ============ 序文 ============ */
 const JO=[
-  'これは、英雄の物語ではない。',
-  '城を建てた者も、天下を取った者も、ここには出てこない。',
-  '出てくるのは、その傍らで畑を耕し、子を産み、手を握り、名も残さず死んでいった――あなたの、遠い先祖たちだ。',
-  '千五百年。ひとつの手が、次の手を、握り続けた。',
-  'それを、九十の夜に分けて、少しずつ、お読みください。',
+  'ひとつの、鉄の釜がある。',
+  '塩を焼き、飯を炊き、ときに武具さえ鋳(い)た。三本の脚で立つその釜を、一族は〈鼎(かなえ)〉と呼んだ。',
+  '磐井(いわい)の乱。大化改新(たいかのかいしん)。元寇(げんこう)。応仁(おうにん)の乱。本能寺(ほんのうじ)。米騒動(こめそうどう)。',
+  '歴史の年表が太い字で記す事件の、その行間で――釜を継いだ者たちは、何を煮て、誰を生かしたか。',
+  'これは、その記録である。九十の夜に分けて、お読みください。',
 ];
 
 /* ============ 時代（13） ============ */
 const ERAS=[
-  {name:'古墳時代', short:'古墳', who:'河内のむら ・ ひな',        from:1,  to:5,  ac:'#c0883a'},
+  {name:'古墳時代', short:'古墳', who:'筑紫の浜 ・ 阿知',          from:1,  to:5,  ac:'#c0883a'},
   {name:'飛鳥時代', short:'飛鳥', who:'飛鳥の里 ・ あすか',        from:6,  to:10, ac:'#c2a13c'},
   {name:'奈良時代', short:'奈良', who:'東国の村 ・ たみ',          from:11, to:16, ac:'#b09248'},
   {name:'平安時代', short:'平安', who:'都 ・ 下女、あこ',          from:17, to:22, ac:'#a5768c'},
@@ -284,12 +288,97 @@ function eraOf(d){ return ERAS.find(e=>d>=e.from && d<=e.to); }
 
 /* ============ 九十日の本文 ============ */
 const DAYS=[
-/* ─ 古墳 1-5 ─ */
-{t:'山が、できていく', p:['山が、できていく。','人の手で土を運び、突き固め、幾百の背が朝から晩まで動いて、大王(おおきみ)の眠る山が、日ごとに空へせり上がっていく。','ひなは、母の背から、それを見ていた。','山の名は、やがて千年、残る。土を運ぶ者の名は、その日のうちに、風が消していく。']},
-{t:'土を運ぶ手', p:['父の掌(てのひら)は、土で黒く割れていた。','なぜ、この一族がその土を運ぶのか、ひなは知らない。大王が誰かも、知らない。','ただ、朝に発ち、夜に帰る父の背が、日に日に薄くなっていくことだけを、知っていた。','「大きな人が、死んだのだ」と母は言った。「わたしたちは、土を盛る」。']},
-{t:'名のある死、名のない死', p:['土を運ぶ列のなかで、ひとり、倒れた者がいた。','夏の盛りだった。運ばれもせず、土の脇に、浅く埋められた。名を呼ぶ声は、なかった。','同じころ、山の頂には、大王のための石が、遠い海から運ばれていた。','死んで山になる者と、死んで土になる者と。ひとつの死が、二つに分かれていた。']},
-{t:'大王が、山になる', p:['やがて、山は、できあがった。','大王の亡骸(なきがら)が、幾重もの土の底へ、静かに納められていく。','人々は遠く離れ、頭(こうべ)を垂れた。父も、割れた掌を膝に置いて、垂れていた。','大王は山になり、名を残した。山を盛った者たちは、名を残さない。それが、この国の、はじまりの決まりだった。']},
-{t:'掌の熱', p:['仕事の終わった夜、父は、囲炉裏のそばで、ひなの小さな手を握った。','土で割れた掌は、ひどく、熱かった。','けれど、握られた手のその熱さは――ひなから、その子へ、その子の子へと、握られ続けていく。','<b>それだけが、この一族の、たったひとつの相続だった。</b>']},
+/* ─ 第一世 古墳・磐井の乱 1-5 ─ */
+{t:'鉄と、塩', p:[
+  '阿知(あち)の一族は、海の向こうから火を連れてきた。',
+  '祖父(おおじ)の代に、加羅(から)の国から筑紫(つくし)の浜へ渡ってきた鍛冶(かじ)の一族だ。彼らはこの島の者がまだ知らぬ技を、二つ持っていた。ひとつは、砂鉄(さてつ)と炭を焚(た)いて赤い鉄(くろがね)を生むこと。もうひとつは、海の水を白い塩に変えること。',
+  'その二つを、ひとつの釜が担っていた。',
+  '父・多々良(たたら)が鋳(い)た、鉄の大釜だ。人が二人がかりでも抱えきれぬほど大きく、三本の脚でどっしりと地を掴(つか)む。父はそれを、加羅の言葉で〈鼎(かなえ)〉と呼んだ。',
+  '昼、鼎は塩を焼く。母・志摩(しま)が汲(く)んだ海の水を注ぎ、藻(も)を焚(く)べ、ひと晩じゅう炊(た)きつめる。朝には釜の底に、雪のように白い塩が残る。',
+  '夜、鼎は飯を炊く。',
+  '筑紫を治める大首長(おおおびと)――筑紫君磐井(つくしのきみ いわい)の館(やかた)で宴(うたげ)があるたび、多々良の一族は呼ばれた。鼎で炊いた飯、塩を打った魚、海の藻を煮た汁。磐井は多々良の塩を、殊(こと)のほか気に入っていた。',
+  '「多々良。お前の塩は、舌の上で二度光る」',
+  '磐井はそう言って笑う男だった。この島の西の果て、筑紫の海の道をすべて握る男。海の向こう――加羅、百済(くだら)、新羅(しらぎ)から来る鉄も絹も、みな磐井の浜を通らねば、東の大和(やまと)へは行けない。',
+  'その富で磐井は、途方もないものを造らせていた。',
+  '生きているうちから、自分の墓を。小山ほどの塚(つか)の上に、石で刻んだ人や馬を幾つも立てた〈岩戸山(いわとやま)〉。阿知は父の使いで塩を運ぶたび、その石の人馬(じんば)を見上げた。',
+  '「生きてるのに、墓を造るのか」と、阿知は父に聞いた。',
+  '多々良は鞴(ふいご)を踏む足を止めずに言った。「己(おのれ)の力を、死んでも見せつけたい。……ああいう者は、たいてい、その力の絶頂(ぜっちょう)でしくじる」',
+  '阿知、十三。その言葉の意味を知るのは、この年の秋である。',
+]},
+{t:'新羅(しらぎ)の、金', p:[
+  '塩を運んだ帰りの浜で、阿知は、あまと会う。',
+  '海人(あま)の一族の娘だ。舟から飛び降り、鮑(あわび)を口にくわえて笑う。潜(もぐ)ればひと息で海の底まで届くと自慢する。阿知の一族が海の水から塩を採(と)るなら、あまの一族は海そのものから食いものを採る。',
+  '「あんたの塩、しょっぱすぎる」とあまは言った。',
+  '「お前の獲(と)る魚が、水くさいんだ」と阿知は返した。',
+  '二人はそういう憎まれ口をきいては、次の日もまた、同じ浜で会った。',
+  'ある夕、浜の火で、あまは獲れたての鮑を焼いた。阿知が塩をひとつまみ、落とす。潮と脂の匂いが、ぱっと立った。あまは目を丸くして、それから黙って三つ食べた。旨いものは、人を黙らせる。',
+  '「……あんたの塩、しょっぱすぎる」と、あまは四つ目を頬張りながら言った。',
+  'それが、あまの「旨い」だということを、阿知はもう知っていた。',
+  '――その頃、磐井の館に、海の向こうからひとりの使者が来ていた。',
+  '新羅の、使者だった。',
+  '両手に抱えきれぬほどの金と鉄の延べ板を、磐井の前に、うずたかく積んでいた。',
+]},
+{t:'海を、閉じる', p:[
+  'その年、東の大和(やまと)の王が、大軍を起こした。',
+  '六万、という数だった。海の向こうの加羅(から)の地で新羅(しらぎ)が暴れ、大和と結ぶ国々を喰(く)い荒らしている。それを討つため、大和の将・近江毛野臣(おうみのけなのおみ)が六万を率いて、筑紫の海を西へ渡ろうとしていた。',
+  'その海の道を握るのが、磐井だった。',
+  '新羅はそれを知っていた。だから、金を積んだ。――磐井よ、大和の軍を通すな。海を、閉じよ。',
+  '磐井は、閉じた。',
+  'ある朝、筑紫の浜から舟が一艘(いっそう)も出なくなった。磐井の兵が湊(みなと)という湊を押さえ、大和へ運ばれるはずの鉄も絹も貢(みつ)ぎ物も、すべて堰(せ)き止めた。海の道が、止まった。',
+  '阿知の一族の暮らしも、その日から変わった。',
+  '多々良の鼎は、もう宴の飯を炊かなくなった。代わりに朝から晩まで、鉄を打った。鏃(やじり)、矛(ほこ)、太刀(たち)。磐井の兵の、いくさ支度(じたく)のためだ。',
+  '「なぜ、父はいくさの道具ばかり打つ?」',
+  '阿知が問うと、多々良は赤い鉄を睨(にら)んだまま低く言った。「打たされているのだ。磐井様に逆らえば、この一族は明日、浜から消される」',
+  '「……磐井様は、勝つのか」',
+  '多々良は長いあいだ答えなかった。それから、ぽつりと言った。',
+  '「西の海ひとつなら、磐井様のものだ。だが東の大和は――島じゅうの兵を、束(たば)にできる。海と、島と。どちらが大きいか、という話だ」',
+]},
+{t:'震える、声', p:[
+  '海が閉じて、いちばんに苦しんだのは、名もなき民だった。',
+  '鉄が入らねば、鍬(くわ)も鎌(かま)も作れない。塩が売れねば、米も買えない。浜の市(いち)から人が消えた。磐井の兵は威張(いば)り、蔵は肥(こ)え、その足元で、漁(りょう)を止められた海人(あま)たちが痩(や)せていった。',
+  'あまの一族も、舟を出せずにいた。',
+  '「魚が獲れても、運べない。運べても、買う者がいない」',
+  '浜の陰で、あまは初めて笑わなかった。「磐井様の金と、あたしらの腹は、繋(つな)がってないんだね」',
+  '阿知は隠していた塩を少し、あまの手に握らせた。この島で塩は、金と同じだ。',
+  'あまはそれを見て、怒ったような、泣きそうな顔をした。',
+  '「……あんた、こういう時に、そういうことをする」',
+  'その夜、東の空が赤かった。',
+  '大和の大軍が、ついに動いた報(しら)せだった。大和の王は、島でいちばんの武人を筑紫へ差し向けた。物部(もののべ)の――麁鹿火(あらかひ)。',
+  '多々良は、鼎の底を静かに撫(な)でた。',
+  '「阿知。よく聞け。この釜は、加羅から祖父(おおじ)が背負ってきた、一族の命だ」',
+  '「父?」',
+  '「何があっても、この鼎(かなえ)だけは離すな。塩の焼き方も、鉄の生み方も、みな、この釜が覚えている」',
+  '父の声が震えているのを、阿知は初めて聞いた。',
+]},
+{t:'岩戸山(いわとやま)、燃ゆ', p:[
+  'いくさは、筑紫の御井(みい)の郡(こおり)でぶつかった。',
+  '物部麁鹿火(もののべのあらかひ)の兵と、磐井の兵。旗と旗、矛と矛。阿知は遠い丘の陰からそれを見た。海しか知らぬ磐井の兵は、島じゅうから集(つど)った大和の軍の数に、日ごとに押されていった。',
+  '多々良の打った鏃(やじり)が飛んだ。多々良の打った矛が折れた。父の鉄は、人を殺(あや)めるために使われていた。塩を、飯を、人を生かすために火を焚(た)いてきた一族の鉄が、だ。',
+  '数日で、決まった。',
+  '磐井は、討たれた。生きて墓を築いた男は、岩戸山の石の人馬(じんば)を見上げる間もなく、露(つゆ)と消えた。海の道を握った富も、新羅の金も、何ひとつ彼を守らなかった。――力の絶頂で、しくじる。父の言葉の意味を、阿知はその秋に知った。',
+  'だが、いくさが終わって、ほんとうの地獄が始まった。',
+  '磐井に鉄を打った者。磐井に塩を納めた者。――多々良の一族は「賊(ぞく)に与(くみ)した者」として、狩られる側に回った。',
+  '「浜を、出るぞ」',
+  '多々良はその夜、鼎に縄をかけ、背に負った。人が二人がかりの釜を、痩せた背ひとつで。母・志摩が塩の種(たね)を、阿知が炭と砂鉄の袋を負い、一族は闇にまぎれて東へ逃げた。',
+  '浜の外れで、あまが待っていた。',
+  '「舟を出す」と、あまは言った。「大和の兵は陸(おか)を固めてる。海からなら、東へ逃げられる」',
+  '「お前の一族は、いいのか。おれたちを匿(かくま)えば――」',
+  '「磐井様の金と、あたしらの腹は、繋がってなかった」と、あまはあの夜と同じことを言って笑った。「だったら、あたしらが誰を助けようと、あたしらの勝手だろ」',
+  '舟に鼎を積んだ。重さで、舟べりが沈んだ。',
+  'その時、松明(たいまつ)が浜に湧(わ)いた。追っ手だった。',
+  '矢が飛んだ。一本が闇を裂き、鼎の胴で甲高く跳ねて、火花が散った。鉄の肌に、浅い疵(きず)がひとつ残った。――この釜が負う、千五百年ぶんの疵の、最初の一つである。',
+  '多々良は阿知を舟へ押し込むと、自分は浜へ残った。',
+  '「父!」',
+  '「釜を、東へ。……阿知、お前が次の火だ」',
+  '多々良は鞴(ふいご)を踏むあの足で砂を蹴(け)って、松明の群れへ、逆に駆けていった。追っ手を舟から引き剥(は)がすために。',
+  '舟が、出た。',
+  '振り返ると、浜の松明がひとつの影を囲んでいくところだった。阿知は叫ばなかった。叫べば舟の在(あ)り処(か)が知れる。声を、腹の底で噛(か)み殺した。母が阿知の頭を胸に抱いた。母の手も、塩で荒れて硬かった。',
+  'やがて、東の空が白んだ。',
+  '海の上で阿知は、背に負うた鼎の冷たい鉄肌に額(ひたい)をつけた。矢の疵に、指が触れた。父の打った、一族の釜。塩を焼き、飯を炊き、そして人を生かしも殺しもした、鉄。',
+  '「……おれが、次の火だ」',
+  '――磐井の乱の、後(のち)。大和は二度と筑紫に海を閉じさせぬよう、磐井の子から糟屋(かすや)の地を取り上げ、そこに屯倉(みやけ)を置いた。王家の直(じか)の蔵である。以後、筑紫の塩も米も鉄も、遠い大和の王の物として数えられていく。海の道はもう、地方の首長(おびと)のものではない。',
+  'その大きな政(まつりごと)の転がりの、ほんの片隅で、鉄の釜ひとつを負った少年の舟が、東の海を漕(こ)いでいた。',
+]},
 /* ─ 飛鳥 6-10 ─ */
 {t:'金色(こんじき)の人', p:['海の向こうから、金色の人が来た、という。','御方(おかた)の寺に、新しい仏(ほとけ)が、金色に光って坐(ざ)していた。','あすかは、父の後ろから、それを見上げた。まぶしくて、目を細めた。']},
 {t:'柱を、削る', p:['父は、その御堂(みどう)の柱を削った、幾人もの手のひとりだった。','木くずにまみれ、朝から晩まで、木を削る。','仏は金色に光り、柱を削る手は、木の色をしていた。']},
@@ -389,6 +478,12 @@ const DAYS=[
 {t:'やがて、この子も', p:['やがてこの子も、誰かの手を握るだろう。','名も残さず。','けれど、たしかに――温かく。','これで、九十日の物語は、了(お)わる。握った手を、離さぬままに。']},
 ];
 
+/* ============ ルビ：漢字(かな) → <ruby> ============ */
+function rubi(s){
+  return s.replace(/([一-鿿々]+)\(([ぁ-ゖー\s]+)\)/g,
+    '<ruby>$1<rt>$2</rt></ruby>');
+}
+
 /* ============ 漢数字 ============ */
 function kan(n){
   const d=['','一','二','三','四','五','六','七','八','九'];
@@ -404,10 +499,10 @@ let ST={ fam:'', start:0, read:[], peek:0 };
 function load(){ try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s) ST=Object.assign(ST,s);}catch(e){} }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(ST)); }catch(e){} }
 function midnight(ms){ const d=new Date(ms); d.setHours(0,0,0,0); return d.getTime(); }
-// 解禁日数：開始日から数えて1日1話。peek（ためし読み）で先へ進める。
+// 解禁日数：最初の三日は一気読み可。以後は開始日から1日1話。peek（先読み）で先へ進める。
 function unlocked(){
   const days=Math.floor((midnight(Date.now())-midnight(ST.start))/DAY_MS)+1;
-  return Math.max(1, Math.min(90, Math.max(days, 1+ST.peek)));
+  return Math.max(1, Math.min(90, Math.max(days, 3, 1+ST.peek)));
 }
 function isRead(d){ return ST.read.includes(d); }
 function markRead(d){ if(!isRead(d)){ ST.read.push(d); save(); } }
@@ -427,16 +522,16 @@ function setAc(d){ const e=eraOf(d); if(e) document.documentElement.style.setPro
 function renderHome(){
   const d=todayDay(), e=eraOf(d);
   setAc(d);
-  $('#dedic').innerHTML = ST.fam ? `――<b>${ST.fam}</b>家に伝わる、名もなき者たちの物語。` : '名もなき者たちの、千五百年の物語。';
+  $('#dedic').innerHTML = '――釜ひとつを継いだ、一族の記録。';
   const done = ST.read.length>=90;
   if(done){
     $('#todayN').innerHTML=''; $('#todayEra').textContent=''; $('#todayTtl').textContent='';
-    $('#todayTease').innerHTML='<span class="allread">九十日を、読み終えました。<br>握った手は、まだ、温かいまま。</span>';
+    $('#todayTease').innerHTML='<span class="allread">九十日を、読み終えました。<br>釜の火は、まだ、消えていません。</span>';
     $('#openToday').textContent='もう一度、はじめから';
   }else{
     $('#todayN').innerHTML = `第<span class="ji">${kan(d)}</span>日`;
     $('#todayEra').textContent = e.name+' ・ '+e.who;
-    $('#todayTtl').textContent = DAYS[d-1].t;
+    $('#todayTtl').innerHTML = rubi(DAYS[d-1].t);
     $('#todayTease').textContent = DAYS[d-1].p[0].replace(/\(.*?\)/g,'');
     $('#openToday').textContent = isRead(d)? 'もう一度、よむ' : 'よ　む';
   }
@@ -458,32 +553,48 @@ function openDay(d){
   reel.style.transition='none'; reel.style.transform='translateX(0)';
   const tob=el('div','etobira');
   tob.appendChild(el('div','no', `第 ${kan(d)} 日`));
-  tob.appendChild(el('div','ttl', DAYS[d-1].t));
+  tob.appendChild(el('div','ttl', rubi(DAYS[d-1].t)));
   tob.appendChild(el('div','who', e.who));
   reel.appendChild(tob);
   const body=el('div','ebody');
-  DAYS[d-1].p.forEach(par=>body.appendChild(el('p',null,par)));
+  DAYS[d-1].p.forEach(par=>body.appendChild(el('p',null,rubi(par))));
   reel.appendChild(body);
   $('#done').classList.remove('show');
   $('#rhint').style.display='';
   show('reader');
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    reel.style.transition='';
-    layout();
-  }));
+  reel.offsetWidth;   // 同期リフロー（背景タブでもrAFに頼らず確実に組む）
+  layout();
+  requestAnimationFrame(()=>{ reel.style.transition=''; });
 }
 function layout(){
   const stage=$('#stage'), reel=$('#reel');
-  const sw=stage.clientWidth, tw=reel.scrollWidth;
-  R.pages=Math.max(1, Math.ceil(tw/sw - 0.02));
+  const cs=getComputedStyle(reel);
+  const pitch=parseFloat(cs.lineHeight);                       // 行送り(px)
+  const PAD=34, sw=stage.clientWidth;
+  R.step=Math.max(pitch, Math.floor((sw-PAD*2)/pitch)*pitch);  // 頁送り＝行の整数倍
+  reel.style.paddingLeft=(sw-PAD-R.step)+'px';                 // 余りは左余白へ＝見える幅も行の整数倍
+  // 扉の送り幅を行送りの倍数に吸着（頁境界で行が割れないように）
+  const tob=reel.querySelector('.etobira');
+  if(tob){
+    tob.style.marginLeft='10px';
+    const w=tob.getBoundingClientRect().width+10;
+    const extra=(pitch-(w%pitch))%pitch;
+    tob.style.marginLeft=(10+extra)+'px';
+  }
+  reel.offsetWidth;                                            // 反映
+  const padL=parseFloat(getComputedStyle(reel).paddingLeft);
+  const tw=reel.scrollWidth-padL-PAD;
+  R.pages=Math.max(1, Math.ceil(tw/R.step));
   if(R.page>R.pages-1) R.page=R.pages-1;
   applyPage(false);
   renderDots();
 }
 function applyPage(anim){
   const reel=$('#reel'), sw=$('#stage').clientWidth;
+  const max=Math.max(0, reel.scrollWidth-sw);
+  const x=Math.min(R.page*(R.step||sw), max);
   reel.style.transition = anim?'':'none';
-  reel.style.transform=`translateX(${R.page*sw}px)`;
+  reel.style.transform=`translateX(${x}px)`;
   if(!anim) requestAnimationFrame(()=>reel.style.transition='');
 }
 function renderDots(){
@@ -504,23 +615,23 @@ function prev(){
 function finishDay(){
   markRead(R.day);
   const d=R.day;
-  $('#doneTtl').textContent = `第${kan(d)}日「${DAYS[d-1].t}」`;
+  $('#doneTtl').innerHTML = rubi(`第${kan(d)}日「${DAYS[d-1].t}」`);
   const e=eraOf(d);
   $('#doneDtl').textContent = `${e.name} ・ ${e.who}`;
   const nxt=$('#doneNxt'), acts=$('#doneActs');
   acts.innerHTML='';
   if(d>=90){
-    nxt.innerHTML='<span class="lbl">奥付</span>てのひらの、千五百年 ―― 全九十日 ・ 了<br>握った手を、離さぬままに。';
+    nxt.innerHTML='<span class="lbl">奥付</span>鼎（かなえ） ―― 全九十日 ・ 了<br>釜の火を、絶やさぬままに。';
     const b=el('button','go','はじめへ　もどる'); b.onclick=()=>{ show('home'); renderHome(); };
     acts.appendChild(b);
   }else if(d+1<=unlocked()){
     const ne=eraOf(d+1);
-    nxt.innerHTML=`<span class="lbl">次の一話</span>第${kan(d+1)}日「${DAYS[d].t}」<br><span style="color:var(--sub)">${ne.name}</span>`;
+    nxt.innerHTML=`<span class="lbl">次の一話</span>${rubi(`第${kan(d+1)}日「${DAYS[d].t}」`)}<br><span style="color:var(--sub)">${ne.name}</span>`;
     const b=el('button','go','▷　次の一話へ'); b.onclick=()=>openDay(d+1);
     acts.appendChild(b);
   }else{
     // 明日、解禁
-    nxt.innerHTML=`<span class="lbl">明日の一話</span>第${kan(d+1)}日「${DAYS[d].t}」<br><span class="lock">物語は、明日にとっておきましょう。</span>`;
+    nxt.innerHTML=`<span class="lbl">明日の一話</span>${rubi(`第${kan(d+1)}日「${DAYS[d].t}」`)}<br><span class="lock">物語は、明日にとっておきましょう。</span>`;
     const pk=el('button','peek','▷　今日のうちに、先を読む'); pk.onclick=()=>{ ST.peek=Math.max(ST.peek, d); if(1+ST.peek<d+1)ST.peek=d; save(); openDay(d+1); };
     acts.appendChild(pk);
   }
@@ -559,13 +670,11 @@ function renderToc(){
 /* ============ 序 ============ */
 function renderJo(){
   const b=$('#joBody'); b.innerHTML='';
-  if(ST.fam) b.appendChild(el('p','d', `――${ST.fam}家に伝わる、名もなき者たちの物語。`));
-  JO.forEach(t=>b.appendChild(el('p',null,t)));
+  JO.forEach(t=>b.appendChild(el('p',null,rubi(t))));
 }
 
 /* ============ イベント ============ */
 $('#open').onclick=()=>{
-  ST.fam=($('#kamei').value||'').trim();
   if(!ST.start) ST.start=Date.now();
   save(); renderHome(); show('home');
 };
@@ -587,7 +696,7 @@ window.addEventListener('resize',()=>{ if($('#reader').classList.contains('show'
 
 /* ============ 起動 ============ */
 load();
-if(ST.start){ $('#kamei').value=ST.fam; renderHome(); show('home'); }
+if(ST.start){ renderHome(); show('home'); }
 else show('cover');
 </script>
 </body>
